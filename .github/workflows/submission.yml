@@ -9,14 +9,13 @@ env:
 
 jobs:
   # ============================================
-  # Job 1: Detect task and validate paths
+  # Job 1: Detect task and validate
   # ============================================
   setup:
     name: Setup & Validate
     runs-on: ubuntu-latest
     outputs:
       task_id: ${{ steps.detect.outputs.task_id }}
-      student_name: ${{ steps.detect.outputs.student_name }}
       week: ${{ steps.detect.outputs.week }}
       is_ai_review_task: ${{ steps.detect.outputs.is_ai_review_task }}
 
@@ -32,11 +31,8 @@ jobs:
           BRANCH="${{ github.head_ref }}"
           echo "Branch: $BRANCH"
 
-          # Extract task ID (e.g., "task-2.1-rahul-kumar" -> "2.1")
+          # Extract task ID (e.g., "task-2.1" or "task-2.1-add-button" -> "2.1")
           TASK_ID=$(echo "$BRANCH" | grep -oP 'task-\K[0-9]+\.[0-9]+' || echo "")
-
-          # Extract student name (e.g., "task-2.1-rahul-kumar" -> "rahul_kumar")
-          STUDENT=$(echo "$BRANCH" | sed 's/task-[0-9]*\.[0-9]*-//' | tr '-' '_')
 
           # Get week number
           WEEK=$(echo "$TASK_ID" | cut -d'.' -f1)
@@ -48,71 +44,20 @@ jobs:
           fi
 
           echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
-          echo "student_name=$STUDENT" >> $GITHUB_OUTPUT
           echo "week=$WEEK" >> $GITHUB_OUTPUT
           echo "is_ai_review_task=$IS_AI_REVIEW" >> $GITHUB_OUTPUT
 
-          echo "Detected: Task=$TASK_ID, Student=$STUDENT, Week=$WEEK, AI Review=$IS_AI_REVIEW"
+          echo "Detected: Task=$TASK_ID, Week=$WEEK, AI Review=$IS_AI_REVIEW"
 
       - name: Validate branch naming
         run: |
           BRANCH="${{ github.head_ref }}"
-          if [[ ! "$BRANCH" =~ ^task-[0-9]+\.[0-9]+-[a-z0-9_-]+$ ]]; then
+          if [[ ! "$BRANCH" =~ ^task-[0-9]+\.[0-9]+ ]]; then
             echo "::error::Invalid branch name format"
-            echo "Expected: task-<week>.<task>-<student_name>"
-            echo "Example: task-2.1-rahul-kumar"
+            echo "Expected: task-<week>.<task> or task-<week>.<task>-<description>"
+            echo "Example: task-2.1 or task-2.1-add-button"
             exit 1
           fi
-
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-
-      - name: Validate paths
-        run: |
-          STUDENT="${{ steps.detect.outputs.student_name }}"
-          ALLOWED_PATTERNS=(
-            "cohort/${STUDENT}/"
-            "team/interns/${STUDENT}.md"
-            "src/"
-            "server/"
-            "docs/"
-          )
-
-          echo "Allowed patterns for $STUDENT:"
-          printf '%s\n' "${ALLOWED_PATTERNS[@]}"
-          echo ""
-
-          INVALID_FILES=()
-
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            VALID=false
-            for pattern in "${ALLOWED_PATTERNS[@]}"; do
-              if [[ "$file" == $pattern* ]]; then
-                VALID=true
-                break
-              fi
-            done
-
-            if [ "$VALID" = false ]; then
-              INVALID_FILES+=("$file")
-            fi
-          done
-
-          if [ ${#INVALID_FILES[@]} -gt 0 ]; then
-            echo "::error::You modified files outside your allowed paths:"
-            printf '  - %s\n' "${INVALID_FILES[@]}"
-            echo ""
-            echo "You can only modify files in:"
-            echo "  - cohort/${STUDENT}/"
-            echo "  - team/interns/${STUDENT}.md"
-            echo "  - src/"
-            echo "  - server/"
-            echo "  - docs/"
-            exit 1
-          fi
-
-          echo "All modified files are in allowed paths"
 
   # ============================================
   # Job 2: Linting
@@ -247,7 +192,7 @@ jobs:
               "pr_url": "${{ github.event.pull_request.html_url }}",
               "task_id": "${{ needs.setup.outputs.task_id }}",
               "student_github": "${{ github.event.pull_request.user.login }}",
-              "cohort_repo": "${{ github.repository }}",
+              "repo": "${{ github.repository }}",
               "track": "fullstack"
             }' || echo "AI review request failed (non-fatal)"
 
@@ -289,7 +234,7 @@ jobs:
               "branch_name": "${{ github.head_ref }}",
               "lint_passed": '"$LINT_PASSED"',
               "test_passed": "'"$TEST_PASSED"'",
-              "cohort_repo": "${{ github.repository }}",
+              "repo": "${{ github.repository }}",
               "track": "fullstack"
             }' || echo "Backend notification failed (non-fatal)"
 
