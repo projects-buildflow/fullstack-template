@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-sarah](https://discord.com/channels/taskmaster/ask-sarah) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [Flexbox Guide](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
 
 ## Objective

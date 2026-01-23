@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-jamie](https://discord.com/channels/taskmaster/ask-jamie) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 
 ## Objective
 

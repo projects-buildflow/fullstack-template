@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-marcus](https://discord.com/channels/taskmaster/ask-marcus) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)
 
 ## Objective

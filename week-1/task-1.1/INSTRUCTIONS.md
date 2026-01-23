@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-alex](https://discord.com/channels/taskmaster/ask-alex) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [All Tasks Overview](../../docs/week-1-tasks.md)
 
 ## Objective
@@ -77,15 +77,6 @@ TASKMASTER-XXXXXXXXXXXX-XXXX
 ```
 
 ## Submitting Your Token
-
-### Option 1: Discord (Recommended)
-
-In any channel, use the slash command:
-```
-/submit TASKMASTER-YOUR-TOKEN-HERE
-```
-
-### Option 2: Web Portal
 
 Go to your Tasks page, click on Task 1.1, and enter your token in the form.
 

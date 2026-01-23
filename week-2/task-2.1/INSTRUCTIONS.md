@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-alex](https://discord.com/channels/taskmaster/ask-alex) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [React Context Guide](https://react.dev/learn/passing-data-deeply-with-context)
 
 ## Objective

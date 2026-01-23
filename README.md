@@ -127,7 +127,6 @@ Add search/filters, optimize performance, deploy to production.
 
 ### Token Tasks (Setup)
 Run the verify script and submit the token:
-- **Discord:** `/submit TASKMASTER-YOUR-TOKEN`
 - **Web Portal:** Tasks page > Submit Token
 
 ### PR Tasks (Code)

@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-marcus](https://discord.com/channels/taskmaster/ask-marcus) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [WAI-ARIA Practices](https://www.w3.org/WAI/ARIA/apg/)
 
 ## Objective

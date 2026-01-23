@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-sarah](https://discord.com/channels/taskmaster/ask-sarah) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
 
 ## Objective

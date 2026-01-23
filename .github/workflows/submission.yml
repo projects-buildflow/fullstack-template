@@ -1,0 +1,296 @@
+name: Task Submission
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ============================================
+  # Job 1: Detect task and validate paths
+  # ============================================
+  setup:
+    name: Setup & Validate
+    runs-on: ubuntu-latest
+    outputs:
+      task_id: ${{ steps.detect.outputs.task_id }}
+      student_name: ${{ steps.detect.outputs.student_name }}
+      week: ${{ steps.detect.outputs.week }}
+      is_ai_review_task: ${{ steps.detect.outputs.is_ai_review_task }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect task from branch name
+        id: detect
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+
+          # Extract task ID (e.g., "task-2.1-rahul-kumar" -> "2.1")
+          TASK_ID=$(echo "$BRANCH" | grep -oP 'task-\K[0-9]+\.[0-9]+' || echo "")
+
+          # Extract student name (e.g., "task-2.1-rahul-kumar" -> "rahul_kumar")
+          STUDENT=$(echo "$BRANCH" | sed 's/task-[0-9]*\.[0-9]*-//' | tr '-' '_')
+
+          # Get week number
+          WEEK=$(echo "$TASK_ID" | cut -d'.' -f1)
+
+          # Check if this is an AI review task (1.6, 3.6, 4.2, 4.6)
+          IS_AI_REVIEW=false
+          if [[ "$TASK_ID" == "1.6" ]] || [[ "$TASK_ID" == "3.6" ]] || [[ "$TASK_ID" == "4.2" ]] || [[ "$TASK_ID" == "4.6" ]]; then
+            IS_AI_REVIEW=true
+          fi
+
+          echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
+          echo "student_name=$STUDENT" >> $GITHUB_OUTPUT
+          echo "week=$WEEK" >> $GITHUB_OUTPUT
+          echo "is_ai_review_task=$IS_AI_REVIEW" >> $GITHUB_OUTPUT
+
+          echo "Detected: Task=$TASK_ID, Student=$STUDENT, Week=$WEEK, AI Review=$IS_AI_REVIEW"
+
+      - name: Validate branch naming
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          if [[ ! "$BRANCH" =~ ^task-[0-9]+\.[0-9]+-[a-z0-9_-]+$ ]]; then
+            echo "::error::Invalid branch name format"
+            echo "Expected: task-<week>.<task>-<student_name>"
+            echo "Example: task-2.1-rahul-kumar"
+            exit 1
+          fi
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+
+      - name: Validate paths
+        run: |
+          STUDENT="${{ steps.detect.outputs.student_name }}"
+          ALLOWED_PATTERNS=(
+            "cohort/${STUDENT}/"
+            "team/interns/${STUDENT}.md"
+            "src/"
+            "server/"
+            "docs/"
+          )
+
+          echo "Allowed patterns for $STUDENT:"
+          printf '%s\n' "${ALLOWED_PATTERNS[@]}"
+          echo ""
+
+          INVALID_FILES=()
+
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            VALID=false
+            for pattern in "${ALLOWED_PATTERNS[@]}"; do
+              if [[ "$file" == $pattern* ]]; then
+                VALID=true
+                break
+              fi
+            done
+
+            if [ "$VALID" = false ]; then
+              INVALID_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#INVALID_FILES[@]} -gt 0 ]; then
+            echo "::error::You modified files outside your allowed paths:"
+            printf '  - %s\n' "${INVALID_FILES[@]}"
+            echo ""
+            echo "You can only modify files in:"
+            echo "  - cohort/${STUDENT}/"
+            echo "  - team/interns/${STUDENT}.md"
+            echo "  - src/"
+            echo "  - server/"
+            echo "  - docs/"
+            exit 1
+          fi
+
+          echo "All modified files are in allowed paths"
+
+  # ============================================
+  # Job 2: Linting
+  # ============================================
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        id: eslint
+        continue-on-error: true
+        run: |
+          npm run lint 2>&1 | tee lint-output.txt || echo "eslint_failed=true" >> $GITHUB_OUTPUT
+
+      - name: Lint summary
+        run: |
+          if [[ "${{ steps.eslint.outputs.eslint_failed }}" == "true" ]]; then
+            echo "::warning::Linting issues found. Please fix them."
+            echo ""
+            echo "To fix issues, run: npm run lint -- --fix"
+            exit 1
+          fi
+          echo "Linting passed"
+
+  # ============================================
+  # Job 3: Run Tests
+  # ============================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.is_ai_review_task != 'true'
+    outputs:
+      passed: ${{ steps.test.outputs.passed }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run task tests
+        id: test
+        continue-on-error: true
+        run: |
+          TASK_ID="${{ needs.setup.outputs.task_id }}"
+
+          # Convert task ID to test file name (2.1 -> task_2_1.test.ts or task_2_1.test.tsx)
+          TEST_FILE_TS="__tests__/task_${TASK_ID//./_}.test.ts"
+          TEST_FILE_TSX="__tests__/task_${TASK_ID//./_}.test.tsx"
+
+          echo "Looking for test files: $TEST_FILE_TS or $TEST_FILE_TSX"
+
+          if [ ! -f "$TEST_FILE_TS" ] && [ ! -f "$TEST_FILE_TSX" ]; then
+            echo "No test file found for task $TASK_ID"
+            echo "passed=skip" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Determine which test file exists
+          if [ -f "$TEST_FILE_TS" ]; then
+            TEST_FILE="$TEST_FILE_TS"
+          else
+            TEST_FILE="$TEST_FILE_TSX"
+          fi
+
+          echo "Running tests from: $TEST_FILE"
+
+          # Run Vitest for specific test file
+          npm run test:run -- "$TEST_FILE" --reporter=verbose 2>&1 | tee test-output.txt
+
+          if [ ${PIPESTATUS[0]} -eq 0 ]; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: test-output.txt
+          if-no-files-found: ignore
+
+  # ============================================
+  # Job 4: AI Review (for documentation tasks)
+  # ============================================
+  ai-review:
+    name: AI Review
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: needs.setup.outputs.is_ai_review_task == 'true'
+
+    steps:
+      - name: Trigger AI review
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+        run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "BACKEND_URL not configured, skipping AI review"
+            exit 0
+          fi
+
+          curl -X POST "${BACKEND_URL}/webhooks/ai-review" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${WEBHOOK_SECRET}" \
+            -d '{
+              "pr_number": ${{ github.event.pull_request.number }},
+              "pr_url": "${{ github.event.pull_request.html_url }}",
+              "task_id": "${{ needs.setup.outputs.task_id }}",
+              "student_github": "${{ github.event.pull_request.user.login }}",
+              "cohort_repo": "${{ github.repository }}",
+              "track": "fullstack"
+            }' || echo "AI review request failed (non-fatal)"
+
+          echo "AI review triggered"
+
+  # ============================================
+  # Job 5: Notify Backend
+  # ============================================
+  notify:
+    name: Notify Backend
+    runs-on: ubuntu-latest
+    needs: [setup, lint, test]
+    if: always()
+
+    steps:
+      - name: Send results to backend
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+        run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "BACKEND_URL not configured, skipping notification"
+            exit 0
+          fi
+
+          # Determine overall status
+          LINT_PASSED="${{ needs.lint.result == 'success' }}"
+          TEST_PASSED="${{ needs.test.outputs.passed || 'skip' }}"
+
+          curl -X POST "${BACKEND_URL}/webhooks/github" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${WEBHOOK_SECRET}" \
+            -d '{
+              "event": "pr_check_complete",
+              "pr_number": ${{ github.event.pull_request.number }},
+              "pr_url": "${{ github.event.pull_request.html_url }}",
+              "task_id": "${{ needs.setup.outputs.task_id }}",
+              "student_github": "${{ github.event.pull_request.user.login }}",
+              "branch_name": "${{ github.head_ref }}",
+              "lint_passed": '"$LINT_PASSED"',
+              "test_passed": "'"$TEST_PASSED"'",
+              "cohort_repo": "${{ github.repository }}",
+              "track": "fullstack"
+            }' || echo "Backend notification failed (non-fatal)"
+
+          echo "Backend notified"

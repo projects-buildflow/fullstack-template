@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-alex](https://discord.com/channels/taskmaster/ask-alex) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [Vercel Docs](https://vercel.com/docs)
 - [Railway Docs](https://docs.railway.app/)
 

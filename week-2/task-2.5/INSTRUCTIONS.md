@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-alex](https://discord.com/channels/taskmaster/ask-alex) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [dnd-kit Documentation](https://dndkit.com/)
 
 ## Objective

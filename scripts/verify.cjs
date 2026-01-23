@@ -115,7 +115,6 @@ if (allPassed) {
   console.log('Your verification token:');
   console.log('\n  ' + token + '\n');
   console.log('Submit this token to complete Task 1.1');
-  console.log('- Discord: /submit ' + token);
   console.log('- Web Portal: Tasks > Task 1.1 > Submit Token\n');
 } else {
   console.log('\n❌ Some checks failed. Please fix the issues above and try again.\n');

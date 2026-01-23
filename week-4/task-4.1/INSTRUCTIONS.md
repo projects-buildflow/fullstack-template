@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Discord #ask-sarah](https://discord.com/channels/taskmaster/ask-sarah) - Get help
+- [Team Chat](https://buildflow.dev/team) - Get help from mentors
 - [Debounce Pattern](https://usehooks.com/useDebounce/)
 
 ## Objective
