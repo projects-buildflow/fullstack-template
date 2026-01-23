@@ -2,29 +2,39 @@
 
 | XP Reward | Estimated Time | Type |
 |-----------|----------------|------|
-| 25 XP | 30 min | AI Review |
+| 25 XP | 45 min | Pull Request |
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [OpenAPI Specification](https://swagger.io/specification/)
+- [Swagger Editor](https://editor.swagger.io/) - Test your spec
 
 ## Objective
 
-Document your API endpoints using OpenAPI/Swagger specification.
+Document your API endpoints using OpenAPI 3.0 specification for clear, professional API documentation.
 
 ## The Situation
 
-> **Jamie Park (Designer):** "Good documentation is essential for any API. Other developers (and future you!) need to understand how to use it. Let's create comprehensive docs using OpenAPI spec - it's the industry standard."
+> **Jamie Park (Designer):** "Good documentation is essential for any API. Other developers (and future you!) need to understand how to use it without reading all the code. Let's create comprehensive docs using OpenAPI spec - it's the industry standard and generates beautiful interactive docs."
 
 ## Requirements
 
-Create API documentation:
+Create API documentation with:
 - OpenAPI 3.0 specification file
-- All endpoints documented
+- All endpoints documented (Auth, Tasks, Columns, Boards)
 - Request/response schemas
-- Authentication details
-- Example requests and responses
+- Authentication requirements
+- Example values
+- Error responses
+
+## What is OpenAPI?
+
+OpenAPI (formerly Swagger) is a standard format for describing REST APIs. Benefits:
+- **Auto-generated docs:** Tools create interactive docs from your spec
+- **Client generation:** Auto-generate API clients in any language
+- **Validation:** Catch API contract violations early
+- **Testing:** Use specs to test your API
 
 ## Steps
 
@@ -36,25 +46,16 @@ git pull origin main
 git checkout -b task-3.6-api-docs
 ```
 
-### 2. Create OpenAPI Specification
+### 2. Understand the OpenAPI Structure
 
 Create `server/docs/openapi.yaml`:
 
 ```yaml
 openapi: 3.0.3
+
 info:
   title: TaskMaster API
-  description: |
-    REST API for the TaskMaster Kanban board application.
-
-    ## Authentication
-    Most endpoints require a JWT token. Include it in the Authorization header:
-    ```
-    Authorization: Bearer <your-token>
-    ```
-
-    ## Rate Limiting
-    API requests are limited to 100 requests per minute per user.
+  description: REST API for the TaskMaster Kanban board application
   version: 1.0.0
   contact:
     name: TaskMaster Support
@@ -70,12 +71,24 @@ tags:
   - name: Auth
     description: Authentication endpoints
   - name: Tasks
-    description: Task management
+    description: Task CRUD operations
   - name: Columns
     description: Column management
   - name: Boards
     description: Board management
 
+paths:
+  # TODO: Add all your endpoints here
+
+components:
+  # TODO: Add reusable schemas, responses, parameters
+```
+
+### 3. Document Authentication Endpoints
+
+**Complete example - Auth endpoints:**
+
+```yaml
 paths:
   /auth/register:
     post:
@@ -95,67 +108,44 @@ paths:
                   example: user@example.com
                 password:
                   type: string
-                  minLength: 6
-                  example: securePassword123
+                  minLength: 8
+                  example: SecurePass123!
                 name:
                   type: string
-                  example: John Doe
+                  example: Jane Doe
       responses:
         201:
-          description: User created successfully
+          description: User registered successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         400:
-          $ref: '#/components/responses/BadRequest'
+          description: Validation error
         409:
-          description: Email already registered
+          description: Email already exists
 
   /auth/login:
     post:
       tags: [Auth]
-      summary: Login with email and password
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email, password]
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-      responses:
-        200:
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        401:
-          description: Invalid credentials
+      summary: Login with credentials
+      # TODO: Add requestBody (email, password)
+      # TODO: Add responses (200, 401)
 
   /auth/me:
     get:
       tags: [Auth]
-      summary: Get current user
+      summary: Get current user profile
       security:
         - bearerAuth: []
-      responses:
-        200:
-          description: Current user info
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
+      # TODO: Add responses (200, 401)
+```
 
+### 4. Document Task Endpoints
+
+**Pattern to follow:**
+
+```yaml
   /tasks:
     get:
       tags: [Tasks]
@@ -168,136 +158,52 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Filter tasks by column
-      responses:
-        200:
-          description: List of tasks
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  tasks:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Task'
+          description: Filter by column ID (optional)
+      # TODO: Add 200 response with array of tasks
+      # TODO: Add 401 unauthorized response
 
     post:
       tags: [Tasks]
       summary: Create a new task
       security:
         - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateTask'
-      responses:
-        201:
-          description: Task created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  task:
-                    $ref: '#/components/schemas/Task'
-        400:
-          $ref: '#/components/responses/BadRequest'
+      # TODO: Add requestBody with CreateTask schema
+      # TODO: Add 201 created response
+      # TODO: Add 400 validation error response
 
   /tasks/{id}:
     get:
-      tags: [Tasks]
-      summary: Get a task by ID
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/TaskId'
-      responses:
-        200:
-          description: Task details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  task:
-                    $ref: '#/components/schemas/Task'
-        404:
-          $ref: '#/components/responses/NotFound'
+      # TODO: Get single task by ID
 
     put:
-      tags: [Tasks]
-      summary: Update a task
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/TaskId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateTask'
-      responses:
-        200:
-          description: Task updated
-        404:
-          $ref: '#/components/responses/NotFound'
+      # TODO: Update task
 
     delete:
-      tags: [Tasks]
-      summary: Delete a task
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/TaskId'
-      responses:
-        200:
-          description: Task deleted
-        404:
-          $ref: '#/components/responses/NotFound'
+      # TODO: Delete task
+```
 
-  /tasks/{id}/move:
-    patch:
-      tags: [Tasks]
-      summary: Move task to different column
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/TaskId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [column_id]
-              properties:
-                column_id:
-                  type: string
-                  format: uuid
-                position:
-                  type: integer
-      responses:
-        200:
-          description: Task moved
+**TODO:** Document all task endpoints (GET, POST, PUT, DELETE)
 
+### 5. Document Column and Board Endpoints
+
+Follow the same pattern for:
+- `/columns` (GET, POST)
+- `/columns/{id}` (GET, PUT, DELETE)
+- `/boards` (GET, POST)
+- `/boards/{id}` (GET, PUT, DELETE)
+
+### 6. Define Reusable Components
+
+**Schemas section:**
+
+```yaml
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-  parameters:
-    TaskId:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+      description: JWT token from /auth/login
 
   schemas:
     User:
@@ -313,94 +219,71 @@ components:
           type: string
         avatar_url:
           type: string
-          nullable: true
-
-    AuthResponse:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-        token:
+          format: uri
+        created_at:
           type: string
+          format: date-time
+      example:
+        id: "123e4567-e89b-12d3-a456-426614174000"
+        email: "user@example.com"
+        name: "Jane Doe"
+        created_at: "2024-01-15T10:30:00Z"
 
     Task:
       type: object
+      required: [id, title, column_id, priority]
       properties:
         id:
           type: string
           format: uuid
-        column_id:
-          type: string
-          format: uuid
         title:
           type: string
-        description:
-          type: string
-          nullable: true
-        priority:
-          type: string
-          enum: [low, medium, high]
-        assignee_id:
-          type: string
-          format: uuid
-          nullable: true
-        due_date:
-          type: string
-          format: date
-          nullable: true
-        position:
-          type: integer
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    CreateTask:
-      type: object
-      required: [column_id, title]
-      properties:
-        column_id:
-          type: string
-          format: uuid
-        title:
-          type: string
+          minLength: 1
           maxLength: 255
         description:
           type: string
         priority:
           type: string
           enum: [low, medium, high]
-          default: medium
-        assignee_id:
-          type: string
-          format: uuid
-        due_date:
-          type: string
-          format: date
-
-    UpdateTask:
-      type: object
-      properties:
-        title:
-          type: string
-        description:
-          type: string
-        priority:
-          type: string
-          enum: [low, medium, high]
-        assignee_id:
-          type: string
-          format: uuid
-        due_date:
-          type: string
-          format: date
         column_id:
           type: string
           format: uuid
+        assignee_id:
+          type: string
+          format: uuid
+        due_date:
+          type: string
+          format: date
         position:
           type: integer
+        created_at:
+          type: string
+          format: date-time
+      # TODO: Add example object
+
+    CreateTask:
+      type: object
+      required: [title, column_id, priority]
+      # TODO: List properties needed to create a task
+
+    UpdateTask:
+      type: object
+      # TODO: All fields optional for partial updates
+
+    Column:
+      # TODO: Define column schema
+
+    Board:
+      # TODO: Define board schema
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT authentication token
+        user:
+          $ref: '#/components/schemas/User'
 
     Error:
       type: object
@@ -412,89 +295,128 @@ components:
               type: string
             status:
               type: integer
+      example:
+        error:
+          message: "Validation failed"
+          status: 400
 
   responses:
     BadRequest:
-      description: Bad request
+      description: Invalid request
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Missing or invalid token
+
     NotFound:
       description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+
+    # TODO: Add more common responses
+
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Task ID
+
+    # TODO: Add ColumnId, BoardId parameters
 ```
 
-### 3. Add Swagger UI (Optional)
+### 7. Test Your Specification
 
+**Option 1: Swagger Editor**
+1. Go to https://editor.swagger.io/
+2. Paste your YAML
+3. Fix any validation errors
+4. See live preview of generated docs
+
+**Option 2: Local Swagger UI**
 ```bash
-npm install swagger-ui-express yamljs
+npm install swagger-ui-express
 ```
 
-Update `server/index.js`:
-
+Add to your Express app:
 ```javascript
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./docs/openapi.yaml');
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 ```
 
-### 4. Create API README
+Visit: http://localhost:3001/api-docs
 
-Create `server/docs/API.md` with quick-start examples for common operations.
-
-### 5. Submit for AI Review
-
-Push your changes and create a PR. The AI will review your documentation for:
-- Completeness
-- Clarity
-- Examples
-- Error documentation
-- Overall quality
+### 8. Submit Your PR
 
 ```bash
 git add .
-git commit -m "docs: add OpenAPI specification for API"
+git commit -m "docs: add OpenAPI specification for all endpoints"
 git push -u origin task-3.6-api-docs
 ```
 
 ## Acceptance Criteria
 
-- [ ] OpenAPI 3.0 spec file created
-- [ ] All endpoints documented
-- [ ] Request/response schemas defined
-- [ ] Authentication documented
-- [ ] Error responses documented
-- [ ] Examples included
-- [ ] Swagger UI working (bonus)
+- [ ] OpenAPI 3.0 specification created
+- [ ] All endpoints documented (Auth, Tasks, Columns, Boards)
+- [ ] Request bodies defined with required fields
+- [ ] Response schemas defined
+- [ ] Authentication documented (Bearer JWT)
+- [ ] Example values provided
+- [ ] Spec validates in Swagger Editor
+- [ ] Common error responses defined
+
+## Resources
+
+- [OpenAPI 3.0 Guide](https://swagger.io/docs/specification/about/)
+- [Swagger Editor](https://editor.swagger.io/) - Validates and previews
+- [Example OpenAPI specs](https://github.com/OAI/OpenAPI-Specification/tree/main/examples)
+- [Schema Object](https://swagger.io/docs/specification/data-models/)
 
 ## Tips
 
-- Use `$ref` to avoid duplication
-- Include realistic examples
-- Document all possible error codes
+- Start with one complete endpoint, then copy the pattern
+- Use `$ref` to avoid repeating schemas
+- Include realistic example values
+- Document error cases - they're important!
+- Test in Swagger Editor frequently to catch syntax errors
+
+## Common Issues
+
+**"Spec doesn't validate"**
+- Check YAML indentation (use spaces, not tabs)
+- Ensure all `$ref` paths are correct
+- Required fields must be in `required` array
+
+**"How to document optional query parameters?"**
+```yaml
+parameters:
+  - name: search
+    in: query
+    required: false  # This makes it optional
+    schema:
+      type: string
+```
+
+**"How to show arrays in responses?"**
+```yaml
+responses:
+  200:
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+```
 
 ---
 
-**Previous Task:** [Task 3.5: Implement User Authentication](../task-3.5/INSTRUCTIONS.md)
+**Previous Task:** [Task 3.5: Implement Authentication](../task-3.5/INSTRUCTIONS.md)
 **Next Task:** [Task 4.1: Add Search & Filter](../../week-4/task-4.1/INSTRUCTIONS.md)
-
----
-
-## Week 3 Complete!
-
-Congratulations on finishing Week 3! You've built a complete backend:
-
-- Database schema design
-- REST API endpoints
-- Frontend-API integration
-- Error handling
-- User authentication
-- API documentation
-
-Next week, you'll add polish features and deploy your app!

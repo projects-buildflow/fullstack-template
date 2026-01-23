@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Forms](https://react.dev/learn/reacting-to-input-with-state)
 
 ## Objective
@@ -51,57 +51,32 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
-  // Close on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
+  // TODO: Add useEffect to handle Escape key
+  // TODO: Prevent body scroll when modal is open
+  // Hint: document.body.style.overflow = 'hidden'
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
+      {/* TODO: Add backdrop that closes on click */}
+      {/* Hint: Use absolute inset-0 bg-black/50 */}
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+      {/* TODO: Add modal container */}
+      {/* Hint: relative bg-white rounded-lg max-w-md */}
 
-        {/* Content */}
-        <div className="p-4">
-          {children}
-        </div>
-      </div>
+      {/* TODO: Add header with title and close button */}
+      {/* TODO: Add content area for children */}
     </div>
   );
 }
 ```
+
+**Design Spec:**
+- Backdrop: `absolute inset-0 bg-black/50` with onClick={onClose}
+- Modal: `relative bg-white rounded-lg shadow-xl w-full max-w-md`
+- Header: `flex items-center justify-between p-4 border-b`
+- Close button: X icon with hover effect
 
 ### 3. Create Add Task Form
 
@@ -114,126 +89,41 @@ import { Button } from './Button';
 
 interface AddTaskFormProps {
   columnId: string;
-  onSubmit: (task: {
-    title: string;
-    description: string;
-    priority: Priority;
-    columnId: string;
-  }) => void;
+  onSubmit: (task: { title: string; description: string; priority: Priority; columnId: string }) => void;
   onCancel: () => void;
 }
 
 export function AddTaskForm({ columnId, onSubmit, onCancel }: AddTaskFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<Priority>('medium');
-  const [errors, setErrors] = useState<{ title?: string }>({});
+  // TODO: Add state for title, description, priority, errors
+  // Hint: const [title, setTitle] = useState('');
 
-  const validate = () => {
-    const newErrors: { title?: string } = {};
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // TODO: Create validate function
+  // Check if title is not empty
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    onSubmit({
-      title: title.trim(),
-      description: description.trim(),
-      priority,
-      columnId,
-    });
-  };
+  // TODO: Create handleSubmit function
+  // Prevent default, validate, call onSubmit
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Title */}
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-          Title *
-        </label>
-        <input
-          id="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.title ? 'border-red-500' : 'border-gray-300'
-          }`}
-          placeholder="Enter task title"
-          autoFocus
-        />
-        {errors.title && (
-          <p className="mt-1 text-sm text-red-500">{errors.title}</p>
-        )}
-      </div>
+      {/* TODO: Add title input field */}
+      {/* Hint: Show error if errors.title exists */}
 
-      {/* Description */}
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter task description (optional)"
-        />
-      </div>
+      {/* TODO: Add description textarea */}
 
-      {/* Priority */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Priority
-        </label>
-        <div className="flex gap-3">
-          {(['low', 'medium', 'high'] as Priority[]).map((p) => (
-            <label
-              key={p}
-              className={`flex-1 text-center py-2 px-3 border rounded-md cursor-pointer transition-colors ${
-                priority === p
-                  ? p === 'low'
-                    ? 'bg-green-100 border-green-500 text-green-700'
-                    : p === 'medium'
-                    ? 'bg-yellow-100 border-yellow-500 text-yellow-700'
-                    : 'bg-red-100 border-red-500 text-red-700'
-                  : 'border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <input
-                type="radio"
-                name="priority"
-                value={p}
-                checked={priority === p}
-                onChange={() => setPriority(p)}
-                className="sr-only"
-              />
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </label>
-          ))}
-        </div>
-      </div>
+      {/* TODO: Add priority radio buttons (low, medium, high) */}
+      {/* Hint: Map over array of priorities */}
 
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary">
-          Add Task
-        </Button>
-      </div>
+      {/* TODO: Add Cancel and Submit buttons */}
     </form>
   );
 }
 ```
+
+**Form Fields:**
+- Title: Required, text input with error state
+- Description: Optional textarea, 3 rows
+- Priority: Radio buttons styled as pills (green/yellow/red)
+- Buttons: Cancel (secondary) and Add Task (primary)
 
 ### 4. Create AddTaskModal Component
 
@@ -253,35 +143,16 @@ interface AddTaskModalProps {
 
 export function AddTaskModal({ isOpen, onClose, columnId }: AddTaskModalProps) {
   const { addTask, state } = useBoard();
-  const column = state.columns.find((c) => c.id === columnId);
 
-  const handleSubmit = (taskData: {
-    title: string;
-    description: string;
-    priority: Priority;
-    columnId: string;
-  }) => {
-    const newTask = {
-      id: `task-${Date.now()}`,
-      ...taskData,
-      createdAt: new Date().toISOString(),
-    };
+  // TODO: Find column title for modal heading
 
-    addTask(newTask);
-    onClose();
-  };
+  // TODO: Create handleSubmit that generates task ID and calls addTask
+  // Hint: Use `task-${Date.now()}` for ID
+  // Hint: Add createdAt: new Date().toISOString()
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Add Task to ${column?.title || 'Column'}`}
-    >
-      <AddTaskForm
-        columnId={columnId}
-        onSubmit={handleSubmit}
-        onCancel={onClose}
-      />
+    <Modal isOpen={isOpen} onClose={onClose} title={`Add Task to ${/* column title */}`}>
+      <AddTaskForm columnId={columnId} onSubmit={handleSubmit} onCancel={onClose} />
     </Modal>
   );
 }
@@ -289,7 +160,7 @@ export function AddTaskModal({ isOpen, onClose, columnId }: AddTaskModalProps) {
 
 ### 5. Integrate with Column Component
 
-Update `src/components/Column.tsx` to use the modal:
+Update `src/components/Column.tsx`:
 
 ```tsx
 import { useState } from 'react';
@@ -298,9 +169,10 @@ import { AddTaskModal } from './AddTaskModal';
 // In your Column component:
 const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-// Add the button and modal:
+// Update Add Task button:
 <button onClick={() => setIsAddModalOpen(true)}>Add Task</button>
 
+// Add modal at end of component:
 <AddTaskModal
   isOpen={isAddModalOpen}
   onClose={() => setIsAddModalOpen(false)}
@@ -339,6 +211,7 @@ git push -u origin task-2.2-add-task
 - Use `autoFocus` on the title input for better UX
 - Prevent body scroll when modal is open
 - Generate unique IDs with `Date.now()` (for now)
+- Test keyboard navigation through form fields
 
 ---
 

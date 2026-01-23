@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Profiler](https://react.dev/reference/react/Profiler)
 
 ## Objective
@@ -43,20 +43,16 @@ Update `src/App.tsx`:
 ```tsx
 import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { LoadingSpinner } from './components/LoadingSpinner';
 
-// Lazy load pages
-const BoardPage = lazy(() => import('./pages/Board'));
-const DashboardPage = lazy(() => import('./pages/Dashboard'));
-const SettingsPage = lazy(() => import('./pages/Settings'));
+// TODO: Lazy load pages
+// const BoardPage = lazy(() => import('./pages/Board'));
+// const DashboardPage = lazy(() => import('./pages/Dashboard'));
 
 function App() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={/* TODO: Loading spinner */}>
       <Routes>
-        <Route path="/" element={<BoardPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        {/* TODO: Use lazy-loaded components */}
       </Routes>
     </Suspense>
   );
@@ -69,35 +65,18 @@ Update `src/components/TaskCard.tsx`:
 
 ```tsx
 import { memo } from 'react';
-import { Task } from '../types/task';
 
-interface TaskCardProps {
-  task: Task;
-  onClick?: () => void;
-  onDelete?: () => void;
-}
-
-export const TaskCard = memo(function TaskCard({
-  task,
-  onClick,
-  onDelete,
-}: TaskCardProps) {
+// TODO: Wrap component with memo()
+export const TaskCard = memo(function TaskCard({ task, onClick, onDelete }: TaskCardProps) {
   // Component implementation...
 }, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if task data changed
-  return (
-    prevProps.task.id === nextProps.task.id &&
-    prevProps.task.title === nextProps.task.title &&
-    prevProps.task.description === nextProps.task.description &&
-    prevProps.task.priority === nextProps.task.priority &&
-    prevProps.task.column_id === nextProps.task.column_id
-  );
+  // TODO: Custom comparison function
+  // Return true if props are equal (skip re-render)
+  // Compare: task.id, title, description, priority, column_id
 });
 ```
 
 ### 4. Memoize Expensive Calculations
-
-Use `useMemo` for filtered/sorted data:
 
 ```tsx
 import { useMemo } from 'react';
@@ -105,27 +84,16 @@ import { useMemo } from 'react';
 function Board() {
   const { state } = useBoard();
 
-  // Memoize task grouping by column
+  // TODO: Memoize task grouping by column
   const tasksByColumn = useMemo(() => {
-    const grouped: Record<string, Task[]> = {};
-    state.columns.forEach((col) => {
-      grouped[col.id] = col.taskIds
-        .map((id) => state.tasks[id])
-        .filter(Boolean);
-    });
-    return grouped;
+    // Group tasks by column_id
+    // Return Record<string, Task[]>
   }, [state.columns, state.tasks]);
 
-  // Memoize sorted tasks within each column
+  // TODO: Memoize sorted tasks within each column
   const sortedTasksByColumn = useMemo(() => {
-    const sorted: Record<string, Task[]> = {};
-    Object.entries(tasksByColumn).forEach(([colId, tasks]) => {
-      sorted[colId] = [...tasks].sort((a, b) => a.position - b.position);
-    });
-    return sorted;
+    // Sort tasks by position within each column
   }, [tasksByColumn]);
-
-  return (/* ... */);
 }
 ```
 
@@ -137,7 +105,7 @@ import { useCallback } from 'react';
 function Board() {
   const { deleteTask, updateTask } = useBoard();
 
-  // Stabilize callbacks to prevent child re-renders
+  // TODO: Wrap callbacks with useCallback
   const handleDeleteTask = useCallback((taskId: string) => {
     deleteTask(taskId);
   }, [deleteTask]);
@@ -146,21 +114,11 @@ function Board() {
     updateTask(taskId, updates);
   }, [updateTask]);
 
-  return (
-    <Column>
-      {tasks.map((task) => (
-        <TaskCard
-          key={task.id}
-          task={task}
-          onDelete={() => handleDeleteTask(task.id)}
-        />
-      ))}
-    </Column>
-  );
+  // TODO: Use stable callbacks in child components
 }
 ```
 
-### 6. Add Virtual List for Large Lists
+### 6. Add Virtual List (Optional)
 
 Install virtualization library:
 
@@ -173,57 +131,16 @@ Create `src/components/VirtualTaskList.tsx`:
 ```tsx
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
-import { Task } from '../types/task';
-import { TaskCard } from './TaskCard';
-
-interface VirtualTaskListProps {
-  tasks: Task[];
-  onTaskClick: (task: Task) => void;
-}
 
 export function VirtualTaskList({ tasks, onTaskClick }: VirtualTaskListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const virtualizer = useVirtualizer({
-    count: tasks.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 120, // Estimated task card height
-    overscan: 5,
-  });
+  // TODO: Set up virtualizer
+  // estimateSize: 120px per task
+  // overscan: 5 items
 
-  return (
-    <div
-      ref={parentRef}
-      className="h-full overflow-auto"
-    >
-      <div
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
-        }}
-      >
-        {virtualizer.getVirtualItems().map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: `${virtualItem.size}px`,
-              transform: `translateY(${virtualItem.start}px)`,
-            }}
-          >
-            <TaskCard
-              task={tasks[virtualItem.index]}
-              onClick={() => onTaskClick(tasks[virtualItem.index])}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // TODO: Render only visible items
+  // Use position: absolute with transform for positioning
 }
 ```
 
@@ -235,35 +152,21 @@ Create `src/hooks/useDebounce.ts`:
 import { useState, useEffect } from 'react';
 
 export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debouncedValue;
+  // TODO: Return debounced value
+  // Use setTimeout to delay updates
+  // Clear timeout on cleanup
 }
 ```
 
-### 8. Measure Performance
+### 8. Measure Performance (Optional)
 
-Add React Profiler to identify slow components:
+Add React Profiler:
 
 ```tsx
 import { Profiler } from 'react';
 
-function onRenderCallback(
-  id: string,
-  phase: string,
-  actualDuration: number,
-) {
-  if (actualDuration > 16) { // Longer than one frame
-    console.log(`Slow render: ${id} took ${actualDuration}ms`);
-  }
+function onRenderCallback(id: string, phase: string, actualDuration: number) {
+  // TODO: Log slow renders (> 16ms)
 }
 
 <Profiler id="Board" onRender={onRenderCallback}>
@@ -282,24 +185,44 @@ git push -u origin task-4.3-performance
 ## Acceptance Criteria
 
 - [ ] Pages are lazy loaded with React.lazy
-- [ ] TaskCard uses React.memo
+- [ ] TaskCard uses React.memo with custom comparison
 - [ ] Expensive computations use useMemo
 - [ ] Callbacks are stabilized with useCallback
-- [ ] Virtual list for columns with many tasks
-- [ ] Search input is debounced
+- [ ] Search input is debounced (300ms)
 - [ ] No console warnings about unnecessary re-renders
 
-## Bonus Challenges
+## Optimization Checklist
 
-1. Add React DevTools Profiler measurements to PR
-2. Implement image lazy loading
-3. Add service worker for caching
+**Code Splitting:**
+- [ ] Lazy load route components
+- [ ] Show loading fallback
+
+**Memoization:**
+- [ ] Memo on TaskCard and other list items
+- [ ] useMemo for filtered/sorted data
+- [ ] useCallback for event handlers
+
+**Input Handling:**
+- [ ] Debounce search input
+- [ ] Throttle scroll events (if any)
+
+**Rendering:**
+- [ ] Avoid inline object/function creation in render
+- [ ] Use key prop correctly in lists
 
 ## Tips
 
 - Profile first, optimize second - don't guess at bottlenecks
 - Be careful with memo - wrong dependencies can cause bugs
 - Virtual lists are only needed for 100+ items
+- Test performance with large datasets
+
+## Key Concepts
+
+**Code Splitting:** Load code only when needed
+**Memoization:** Cache computed values to avoid recalculation
+**Virtualization:** Render only visible items in long lists
+**Debouncing:** Delay function execution until user stops
 
 ---
 

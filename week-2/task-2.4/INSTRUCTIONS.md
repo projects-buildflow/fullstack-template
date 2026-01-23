@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Dialog Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 
 ## Objective
@@ -23,7 +23,7 @@ Create a deletion system with:
 - Confirmation dialog before delete
 - Clear warning message
 - Cancel and Confirm buttons
-- Keyboard shortcut for power users
+- Keyboard shortcut for power users (bonus)
 - Accessible dialog implementation
 
 ## Steps
@@ -65,101 +65,29 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  // TODO: Add useEffect for Escape key handling
 
-  useEffect(() => {
-    if (isOpen) {
-      // Focus the cancel button (safer default)
-      confirmButtonRef.current?.focus();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      if (e.key === 'Escape') {
-        onCancel();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onCancel]);
+  // TODO: Focus management (focus cancel button by default for safety)
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-      aria-describedby="dialog-description"
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-
-      {/* Dialog */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
-        {/* Icon */}
-        <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
-          variant === 'danger' ? 'bg-red-100' : 'bg-yellow-100'
-        }`}>
-          <svg
-            className={`w-6 h-6 ${variant === 'danger' ? 'text-red-600' : 'text-yellow-600'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-        </div>
-
-        {/* Title */}
-        <h2
-          id="dialog-title"
-          className="text-lg font-semibold text-center text-gray-900 mb-2"
-        >
-          {title}
-        </h2>
-
-        {/* Message */}
-        <p
-          id="dialog-description"
-          className="text-gray-600 text-center mb-6"
-        >
-          {message}
-        </p>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            className="flex-1"
-            onClick={onCancel}
-          >
-            {cancelLabel}
-          </Button>
-          <Button
-            ref={confirmButtonRef}
-            variant={variant}
-            className="flex-1"
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" role="alertdialog">
+      {/* TODO: Add backdrop */}
+      {/* TODO: Add dialog box with warning icon */}
+      {/* TODO: Add title (h2 with id for aria-labelledby) */}
+      {/* TODO: Add message (p with id for aria-describedby) */}
+      {/* TODO: Add Cancel and Confirm buttons */}
     </div>
   );
 }
 ```
+
+**Design Spec:**
+- Warning icon: Circle with exclamation mark (red for danger, yellow for warning)
+- Layout: Centered dialog, icon above text
+- Buttons: Cancel (secondary) and Confirm (danger/warning variant)
+- ARIA attributes: `role="alertdialog"`, `aria-labelledby`, `aria-describedby`
 
 ### 3. Create useDeleteTask Hook
 
@@ -179,10 +107,8 @@ export function useDeleteTask() {
   }, []);
 
   const confirmDelete = useCallback(() => {
-    if (taskToDelete) {
-      deleteTask(taskToDelete.id);
-      setTaskToDelete(null);
-    }
+    // TODO: Call deleteTask with taskToDelete.id
+    // TODO: Clear taskToDelete
   }, [taskToDelete, deleteTask]);
 
   const cancelDelete = useCallback(() => {
@@ -204,8 +130,6 @@ export function useDeleteTask() {
 Update `src/components/TaskCard.tsx`:
 
 ```tsx
-import { MouseEvent } from 'react';
-
 interface TaskCardProps {
   task: Task;
   onClick?: () => void;
@@ -226,12 +150,10 @@ export function TaskCard({ task, onClick, onDelete }: TaskCardProps) {
       {onDelete && (
         <button
           onClick={handleDelete}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded"
           title="Delete task"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          {/* TODO: Add trash icon SVG */}
         </button>
       )}
     </div>
@@ -249,28 +171,12 @@ import { useDeleteTask } from '../hooks/useDeleteTask';
 
 export function Board() {
   const { state } = useBoard();
-  const {
-    taskToDelete,
-    requestDelete,
-    confirmDelete,
-    cancelDelete,
-    isDeleteDialogOpen,
-  } = useDeleteTask();
+  const { taskToDelete, requestDelete, confirmDelete, cancelDelete, isDeleteDialogOpen } = useDeleteTask();
 
   return (
     <>
       <div className="flex gap-6 overflow-x-auto p-6">
-        {state.columns.map((column) => (
-          <Column key={column.id} column={column} taskCount={column.taskIds.length}>
-            {column.taskIds.map((taskId) => (
-              <TaskCard
-                key={taskId}
-                task={state.tasks[taskId]}
-                onDelete={() => requestDelete(state.tasks[taskId])}
-              />
-            ))}
-          </Column>
-        ))}
+        {/* Render columns and tasks with onDelete={requestDelete} */}
       </div>
 
       <ConfirmDialog
@@ -288,27 +194,7 @@ export function Board() {
 }
 ```
 
-### 6. Add Keyboard Shortcut (Bonus)
-
-Add to TaskCard when selected:
-
-```tsx
-useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Backspace') {
-      onDelete?.();
-    }
-  };
-
-  if (isSelected) {
-    document.addEventListener('keydown', handleKeyDown);
-  }
-
-  return () => document.removeEventListener('keydown', handleKeyDown);
-}, [isSelected, onDelete]);
-```
-
-### 7. Test the Feature
+### 6. Test the Feature
 
 1. Hover over a task card - delete button appears
 2. Click delete - confirmation dialog opens
@@ -316,7 +202,7 @@ useEffect(() => {
 4. Click Delete - task is removed
 5. Test keyboard: Escape closes dialog
 
-### 8. Submit Your PR
+### 7. Submit Your PR
 
 ```bash
 git add .
@@ -345,6 +231,7 @@ git push -u origin task-2.4-delete-confirmation
 - Use `role="alertdialog"` for accessibility
 - Stop event propagation on delete button
 - Show task title in confirmation message
+- Focus Cancel button by default (safer)
 
 ---
 

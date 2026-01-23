@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [All Tasks Overview](../../docs/week-1-tasks.md)
 
 ## Objective

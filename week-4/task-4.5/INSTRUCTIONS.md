@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Vercel Docs](https://vercel.com/docs)
 - [Railway Docs](https://docs.railway.app/)
 
@@ -18,14 +18,16 @@ Deploy your application to a cloud platform (Vercel/Railway) with environment co
 
 > **Alex Chen (Tech Lead):** "Time to ship! We'll deploy the frontend to Vercel (great for React apps) and the backend to Railway (simple Node.js hosting). You'll learn about environment variables, CI/CD, and production configurations."
 
-## Requirements
+## Deployment Architecture
 
-Deploy the application:
-- Frontend deployed to Vercel
-- Backend deployed to Railway (or Render)
-- Database on Supabase
-- Environment variables configured
-- Custom domain (optional)
+```
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│    Vercel       │         │    Railway      │         │   Supabase      │
+│   (Frontend)    │────────▶│   (Backend)     │────────▶│   (Database)    │
+│                 │  HTTPS  │                 │  HTTPS  │                 │
+│ React + Vite    │         │ Node + Express  │         │   PostgreSQL    │
+└─────────────────┘         └─────────────────┘         └─────────────────┘
+```
 
 ## Steps
 
@@ -48,14 +50,11 @@ Create `vercel.json`:
   "framework": "vite",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "env": {
-    "VITE_API_URL": "@api_url"
-  }
+  ]
 }
 ```
 
-Update environment variables in your app:
+Update environment variables:
 
 ```typescript
 // src/config.ts
@@ -73,122 +72,95 @@ Create `Procfile` in server directory:
 web: node index.js
 ```
 
-Update `server/index.js` for production:
+Update `server/index.js`:
 
 ```javascript
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+// TODO: Add production middleware
+// Install: npm install helmet express-rate-limit
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-const isProduction = process.env.NODE_ENV === 'production';
+// TODO: Add helmet for security headers
+// app.use(helmet());
 
-// Security middleware
-app.use(helmet());
+// TODO: Add rate limiting
+// 100 requests per 15 minutes per IP
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
+// TODO: Configure CORS for production
+// Allow only FRONTEND_URL from environment
 
-// CORS - allow frontend origin in production
-app.use(cors({
-  origin: isProduction
-    ? process.env.FRONTEND_URL
-    : 'http://localhost:3000',
-  credentials: true,
-}));
-
-app.use(express.json());
-
-// Health check for deployment platform
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/tasks', require('./routes/tasks'));
-// ... other routes
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-```
-
-Install production dependencies:
-
-```bash
-npm install helmet express-rate-limit
+// TODO: Add health check endpoint
+// GET /health returns { status: 'ok' }
 ```
 
 ### 4. Deploy Backend to Railway
 
+**Step-by-step guide:**
+
 1. **Create Railway Account**
-   - Go to [railway.app](https://railway.app)
+   - Visit railway.app
    - Sign up with GitHub
 
 2. **Create New Project**
    - Click "New Project"
    - Select "Deploy from GitHub repo"
    - Choose your repository
-   - Select the `server` directory
+   - Select `server` directory as root
 
 3. **Add Environment Variables**
-   In Railway dashboard, add:
    ```
-   DATABASE_URL=your-supabase-url
-   JWT_SECRET=your-jwt-secret
+   DATABASE_URL=your-supabase-connection-string
+   JWT_SECRET=your-long-random-secret
    NODE_ENV=production
    FRONTEND_URL=https://your-app.vercel.app
+   PORT=3001
    ```
 
 4. **Generate Domain**
-   - Go to Settings > Domains
-   - Generate a Railway domain or add custom
+   - Go to Settings > Networking
+   - Generate a public domain
+   - Save the URL (e.g., `your-app.railway.app`)
 
 ### 5. Deploy Frontend to Vercel
 
+**Step-by-step guide:**
+
 1. **Create Vercel Account**
-   - Go to [vercel.com](https://vercel.com)
+   - Visit vercel.com
    - Sign up with GitHub
 
 2. **Import Project**
    - Click "New Project"
    - Import your GitHub repository
-   - Set root directory to frontend folder
+   - Set root directory to frontend folder (if not at root)
 
 3. **Configure Environment Variables**
-   In Vercel dashboard:
    ```
    VITE_API_URL=https://your-api.railway.app/api
    ```
 
 4. **Deploy**
-   - Vercel will automatically build and deploy
+   - Vercel builds and deploys automatically
    - Get your production URL
 
 ### 6. Set Up Database on Supabase
 
+**Step-by-step guide:**
+
 1. **Create Supabase Project**
-   - Go to [supabase.com](https://supabase.com)
+   - Visit supabase.com
    - Create new project
+   - Wait for setup to complete
 
 2. **Run Migrations**
    - Go to SQL Editor
-   - Run your `schema.sql`
-   - Run your `seed.sql` (optional for prod)
+   - Copy your `schema.sql` and run it
+   - Optionally run `seed.sql` for test data
 
 3. **Get Connection String**
    - Go to Settings > Database
    - Copy the connection string
    - Add to Railway environment variables
 
-### 7. Create GitHub Actions for CI/CD
+### 7. Create GitHub Actions (Optional)
 
 Create `.github/workflows/deploy.yml`:
 
@@ -198,8 +170,6 @@ name: Deploy
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   test:
@@ -207,34 +177,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
+      # TODO: Setup Node.js
 
-      - name: Install dependencies
-        run: npm ci
+      # TODO: Install dependencies
 
-      - name: Run linter
-        run: npm run lint
+      # TODO: Run linter
 
-      - name: Run tests
-        run: npm test
-
-  deploy-preview:
-    if: github.event_name == 'pull_request'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Deploy to Vercel Preview
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      # TODO: Run tests
 ```
 
 ### 8. Update README with Deployment Info
@@ -262,11 +211,12 @@ Add to your README:
 
 ### 9. Verify Deployment
 
-1. Visit your Vercel URL
-2. Test login/register
-3. Create a task
-4. Verify data persists
-5. Check API health endpoint
+Checklist:
+- [ ] Visit Vercel URL - app loads
+- [ ] Test login/register
+- [ ] Create a task
+- [ ] Refresh - task persists
+- [ ] Check API health endpoint
 
 ### 10. Submit Your PR
 
@@ -281,16 +231,49 @@ git push -u origin task-4.5-deployment
 - [ ] Frontend deployed to Vercel
 - [ ] Backend deployed to Railway/Render
 - [ ] Database on Supabase
-- [ ] Environment variables configured
-- [ ] CORS configured for production
+- [ ] Environment variables configured correctly
+- [ ] CORS configured for production domain
 - [ ] Health check endpoint works
 - [ ] App functions correctly in production
+
+## Environment Variables Reference
+
+**Frontend (.env):**
+```
+VITE_API_URL=https://your-api.railway.app/api
+```
+
+**Backend (.env):**
+```
+DATABASE_URL=postgresql://user:pass@host:5432/db
+JWT_SECRET=your-secret-key-change-this
+NODE_ENV=production
+FRONTEND_URL=https://your-app.vercel.app
+PORT=3001
+```
 
 ## Tips
 
 - Never commit secrets to git - use environment variables
-- Test on preview deployments before merging
+- Test on preview deployments before merging to main
 - Set up error monitoring (Sentry) for production
+- Use strong JWT_SECRET in production
+- Enable HTTPS only in production
+
+## Troubleshooting
+
+**"Failed to fetch" errors:**
+- Check CORS configuration
+- Verify API URL is correct
+- Check Railway logs
+
+**Database connection errors:**
+- Verify DATABASE_URL is correct
+- Check Supabase connection pooling settings
+
+**Build errors:**
+- Check all dependencies are in package.json
+- Verify build command is correct
 
 ---
 

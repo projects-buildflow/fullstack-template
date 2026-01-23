@@ -6,8 +6,9 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Documentation](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 
 ## Objective
 
@@ -19,14 +20,38 @@ Create your developer profile card component and introduce yourself to the team 
 
 ## Requirements
 
-Create a `DeveloperProfile` component that displays:
+Build a `DeveloperProfile` component that displays:
 - Your name
-- Your GitHub avatar
+- Your GitHub avatar (fetched from GitHub)
 - A short bio (2-3 sentences)
 - Your location (optional)
-- Links to your GitHub profile
+- Link to your GitHub profile
 
-## Steps
+## Design Specifications
+
+**Component should:**
+- Be a card with white background, rounded corners, and subtle shadow
+- Center the avatar (circular, 96px × 96px)
+- Display name prominently below avatar
+- Show GitHub username with @ prefix in gray
+- Include clickable link to GitHub profile
+- Be responsive (max-width: 384px)
+
+**Visual hierarchy:**
+```
+┌─────────────────────┐
+│    [Avatar Image]   │
+│     Your Name       │
+│   @your-username    │
+│   City, Country     │
+│                     │
+│   Your bio text...  │
+│                     │
+│ View GitHub Profile │
+└─────────────────────┘
+```
+
+## Implementation Guide
 
 ### 1. Create a New Branch
 
@@ -36,8 +61,9 @@ git checkout -b task-1.2-developer-profile
 
 ### 2. Create the Component
 
-Create a new file: `src/components/DeveloperProfile.tsx`
+Create `src/components/DeveloperProfile.tsx` with:
 
+**Props Interface:**
 ```tsx
 interface DeveloperProfileProps {
   name: string;
@@ -45,72 +71,46 @@ interface DeveloperProfileProps {
   bio: string;
   location?: string;
 }
-
-export function DeveloperProfile({
-  name,
-  githubUsername,
-  bio,
-  location
-}: DeveloperProfileProps) {
-  const avatarUrl = `https://github.com/${githubUsername}.png`;
-
-  return (
-    <div className="bg-white rounded-lg shadow-md p-6 max-w-sm">
-      <img
-        src={avatarUrl}
-        alt={name}
-        className="w-24 h-24 rounded-full mx-auto mb-4"
-      />
-      <h2 className="text-xl font-bold text-center">{name}</h2>
-      <p className="text-gray-500 text-center mb-2">@{githubUsername}</p>
-      {location && (
-        <p className="text-gray-400 text-sm text-center mb-4">{location}</p>
-      )}
-      <p className="text-gray-700 text-center">{bio}</p>
-      <a
-        href={`https://github.com/${githubUsername}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block mt-4 text-center text-blue-600 hover:underline"
-      >
-        View GitHub Profile
-      </a>
-    </div>
-  );
-}
 ```
 
-### 3. Add Your Profile to the Team Page
+**Your tasks:**
+- Create the component function accepting these props
+- Build the avatar URL: `https://github.com/${githubUsername}.png`
+- Return JSX with card layout (see design specs above)
+- Style with Tailwind CSS classes
 
-Open `src/pages/Team.tsx` and add your profile:
+**Tailwind hints:**
+- Card: `bg-white`, `rounded-lg`, `shadow-md`, `p-6`, `max-w-sm`
+- Avatar: `w-24`, `h-24`, `rounded-full`, `mx-auto`, `mb-4`
+- Name: `text-xl`, `font-bold`, `text-center`
+- Username: `text-gray-500`, `text-center`
+- Link: `text-blue-600`, `hover:underline`
 
-```tsx
-import { DeveloperProfile } from '../components/DeveloperProfile';
+### 3. Add to Team Page
 
-export function TeamPage() {
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Our Team</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <DeveloperProfile
-          name="Your Name"
-          githubUsername="your-username"
-          bio="Your bio goes here. Tell us about yourself!"
-          location="Your City, Country"
-        />
-      </div>
-    </div>
-  );
-}
-```
+Create or update `src/pages/Team.tsx`:
+- Import your `DeveloperProfile` component
+- Create a grid layout for multiple profiles
+- Add your profile with real information
+
+**Grid layout suggestion:**
+- 1 column on mobile
+- 2 columns on tablet
+- 3 columns on desktop
 
 ### 4. Test Your Changes
 
-1. Run `npm run dev` if not already running
-2. Navigate to http://localhost:3000/team
-3. Verify your profile card appears correctly
+```bash
+npm run dev
+```
 
-### 5. Commit and Push
+Navigate to http://localhost:3000/team and verify:
+- Avatar loads from GitHub
+- All text displays correctly
+- Link opens GitHub in new tab
+- Responsive layout works
+
+### 5. Submit Your PR
 
 ```bash
 git add .
@@ -118,28 +118,40 @@ git commit -m "feat: add developer profile card for [Your Name]"
 git push -u origin task-1.2-developer-profile
 ```
 
-### 6. Create a Pull Request
-
-1. Go to your repository on GitHub
-2. Click "Compare & pull request"
-3. Title: `Task 1.2: Developer Profile - [Your Name]`
-4. Description: Include a screenshot of your profile card
-5. Submit the PR
+Create PR on GitHub:
+- Title: `Task 1.2: Developer Profile - [Your Name]`
+- Include a screenshot of your profile card
+- Mention what you learned
 
 ## Acceptance Criteria
 
-- [ ] Component accepts name, githubUsername, bio, and optional location props
-- [ ] Displays GitHub avatar using the GitHub avatar URL pattern
-- [ ] Shows your name and GitHub username
-- [ ] Includes a link to your GitHub profile
-- [ ] Uses Tailwind CSS for styling
-- [ ] Code passes lint checks (`npm run lint`)
+- [ ] Component is properly typed with TypeScript
+- [ ] Displays GitHub avatar using correct URL pattern
+- [ ] Shows all required information (name, username, bio)
+- [ ] GitHub link opens in new tab (`target="_blank"`, `rel="noopener noreferrer"`)
+- [ ] Uses Tailwind CSS (no custom CSS)
+- [ ] Passes `npm run lint` with no errors
+- [ ] Profile appears on /team page
 
-## Tips
+## Resources
 
-- Use the GitHub avatar URL pattern: `https://github.com/{username}.png`
-- Make your bio genuine - this is how the team gets to know you!
-- Keep components simple and focused on one thing
+- [GitHub Avatar API](https://docs.github.com/en/rest/users) - `https://github.com/{username}.png`
+- [React Props](https://react.dev/learn/passing-props-to-a-component)
+- [Tailwind Grid](https://tailwindcss.com/docs/grid-template-columns)
+
+## Common Issues
+
+**Avatar not loading?**
+- Check username spelling
+- GitHub avatars are public - no auth needed
+
+**TypeScript errors?**
+- Ensure all props are defined in interface
+- Optional props use `?` syntax
+
+**Link not working?**
+- Use template literal: `` `https://github.com/${githubUsername}` ``
+- Include `target="_blank"` for new tab
 
 ---
 

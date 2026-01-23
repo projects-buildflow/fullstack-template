@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Recharts](https://recharts.org/) - Charting library
 
 ## Objective
@@ -40,6 +40,7 @@ git checkout -b task-4.2-user-dashboard
 
 ```bash
 npm install recharts
+# Or build custom charts with SVG
 ```
 
 ### 3. Create Dashboard Page
@@ -49,156 +50,29 @@ Create `src/pages/Dashboard.tsx`:
 ```tsx
 import { useAuth } from '../context/AuthContext';
 import { useBoard } from '../context/BoardContext';
-import { TaskCard } from '../components/TaskCard';
-import { StatsCard } from '../components/StatsCard';
-import { ActivityFeed } from '../components/ActivityFeed';
-import { ProgressChart } from '../components/ProgressChart';
 
 export function DashboardPage() {
   const { user } = useAuth();
   const { state } = useBoard();
 
-  // Get user's tasks
-  const allTasks = Object.values(state.tasks);
-  const myTasks = allTasks.filter((t) => t.assignee_id === user?.id);
-  const completedTasks = myTasks.filter((t) => t.column_id === 'done');
-  const inProgressTasks = myTasks.filter((t) => t.column_id === 'in-progress');
-  const overdueTasks = myTasks.filter((t) => {
-    if (!t.due_date) return false;
-    return new Date(t.due_date) < new Date() && t.column_id !== 'done';
-  });
+  // TODO: Get user's tasks from state
+  // Filter tasks where assignee_id matches user.id
 
-  // Calculate stats
-  const completionRate = myTasks.length > 0
-    ? Math.round((completedTasks.length / myTasks.length) * 100)
-    : 0;
+  // TODO: Calculate statistics
+  // - Total tasks assigned to user
+  // - Completed tasks (in 'done' column)
+  // - In progress tasks
+  // - Overdue tasks (due_date < today and not done)
+  // - Completion rate (completed / total * 100)
 
-  return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Welcome back, {user?.name}!</h1>
-        <p className="text-gray-600 mt-1">
-          Here's your productivity overview
-        </p>
-      </div>
+  // TODO: Render header with welcome message
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatsCard
-          title="My Tasks"
-          value={myTasks.length}
-          icon="📋"
-          color="blue"
-        />
-        <StatsCard
-          title="Completed"
-          value={completedTasks.length}
-          icon="✅"
-          color="green"
-        />
-        <StatsCard
-          title="In Progress"
-          value={inProgressTasks.length}
-          icon="🔄"
-          color="yellow"
-        />
-        <StatsCard
-          title="Overdue"
-          value={overdueTasks.length}
-          icon="⚠️"
-          color="red"
-        />
-      </div>
+  // TODO: Render stats grid (4 cards)
+  // Use StatsCard component for each metric
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - My Tasks */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Tasks Due Soon */}
-          <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Tasks Due Soon</h2>
-            {inProgressTasks.length === 0 ? (
-              <p className="text-gray-500">No tasks in progress</p>
-            ) : (
-              <div className="space-y-3">
-                {inProgressTasks.slice(0, 5).map((task) => (
-                  <TaskCard key={task.id} task={task} compact />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Progress Chart */}
-          <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Weekly Progress</h2>
-            <ProgressChart tasks={myTasks} />
-          </section>
-        </div>
-
-        {/* Right Column - Activity & Stats */}
-        <div className="space-y-6">
-          {/* Completion Rate */}
-          <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">Completion Rate</h2>
-            <div className="flex items-center gap-4">
-              <div className="relative w-24 h-24">
-                <svg className="w-24 h-24 transform -rotate-90">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="none"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#22c55e"
-                    strokeWidth="8"
-                    fill="none"
-                    strokeDasharray={`${completionRate * 2.51} 251`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold">
-                  {completionRate}%
-                </span>
-              </div>
-              <div>
-                <p className="text-gray-600">
-                  {completedTasks.length} of {myTasks.length} tasks completed
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Recent Activity */}
-          <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-            <ActivityFeed userId={user?.id} limit={5} />
-          </section>
-
-          {/* Quick Actions */}
-          <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-            <div className="space-y-2">
-              <button className="w-full text-left px-4 py-2 rounded hover:bg-gray-50">
-                ➕ Create New Task
-              </button>
-              <button className="w-full text-left px-4 py-2 rounded hover:bg-gray-50">
-                📊 View All Boards
-              </button>
-              <button className="w-full text-left px-4 py-2 rounded hover:bg-gray-50">
-                ⚙️ Settings
-              </button>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-  );
+  // TODO: Render main content area
+  // Left: Tasks due soon, Weekly progress chart
+  // Right: Completion rate circle, Recent activity, Quick actions
 }
 ```
 
@@ -214,27 +88,12 @@ interface StatsCardProps {
   color: 'blue' | 'green' | 'yellow' | 'red';
 }
 
-const colorClasses = {
-  blue: 'bg-blue-50 text-blue-600',
-  green: 'bg-green-50 text-green-600',
-  yellow: 'bg-yellow-50 text-yellow-600',
-  red: 'bg-red-50 text-red-600',
-};
-
 export function StatsCard({ title, value, icon, color }: StatsCardProps) {
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-3xl font-bold mt-1">{value}</p>
-        </div>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${colorClasses[color]}`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
+  // TODO: Render card with:
+  // - Icon with colored background
+  // - Title (small gray text)
+  // - Value (large bold number)
+  // Use Tailwind classes based on color prop
 }
 ```
 
@@ -251,52 +110,17 @@ interface ProgressChartProps {
 }
 
 export function ProgressChart({ tasks }: ProgressChartProps) {
-  // Calculate last 7 days of completions
+  // TODO: Calculate last 7 days of completions
   const chartData = useMemo(() => {
-    const days = [];
-    const today = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-
-      const completed = tasks.filter((t) => {
-        if (!t.completed_at) return false;
-        return t.completed_at.split('T')[0] === dateStr;
-      }).length;
-
-      days.push({
-        day: date.toLocaleDateString('en', { weekday: 'short' }),
-        completed,
-      });
-    }
-
-    return days;
+    // For each of last 7 days:
+    // - Get date
+    // - Count tasks completed on that date
+    // - Return { day: 'Mon', completed: 3 }
   }, [tasks]);
 
-  const maxValue = Math.max(...chartData.map((d) => d.completed), 5);
-
-  return (
-    <div className="h-48">
-      <div className="flex items-end justify-between h-full gap-2">
-        {chartData.map((day, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center">
-            <div className="flex-1 w-full flex items-end">
-              <div
-                className="w-full bg-blue-500 rounded-t"
-                style={{
-                  height: `${(day.completed / maxValue) * 100}%`,
-                  minHeight: day.completed > 0 ? '8px' : '0',
-                }}
-              />
-            </div>
-            <span className="text-xs text-gray-500 mt-2">{day.day}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // TODO: Render bar chart
+  // Use CSS to create bars with height based on value
+  // Show day labels below each bar
 }
 ```
 
@@ -311,37 +135,29 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
-  // In real app, fetch from activity API
-  const activities = [
-    { id: '1', type: 'complete', task: 'Setup database', time: '2 hours ago' },
-    { id: '2', type: 'create', task: 'Add filters', time: '5 hours ago' },
-    { id: '3', type: 'move', task: 'Design mockups', time: '1 day ago' },
-  ];
+  // TODO: In real app, fetch from activity API
+  // For now, show placeholder activities
 
-  const icons = {
-    complete: '✅',
-    create: '➕',
-    move: '📦',
-    comment: '💬',
-  };
-
-  return (
-    <div className="space-y-3">
-      {activities.slice(0, limit).map((activity) => (
-        <div key={activity.id} className="flex items-start gap-3">
-          <span className="text-lg">{icons[activity.type as keyof typeof icons]}</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm truncate">{activity.task}</p>
-            <p className="text-xs text-gray-400">{activity.time}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  // TODO: Render list of activities with:
+  // - Icon for action type (complete, create, move)
+  // - Task name
+  // - Time ago
 }
 ```
 
-### 7. Add Route
+### 7. Add Completion Rate Circle
+
+In your dashboard:
+
+```tsx
+// TODO: Render circular progress indicator
+// Use SVG circle with strokeDasharray for progress
+// Show percentage in center
+// Formula: circumference = 2 * PI * radius
+// Progress: (completionRate / 100) * circumference
+```
+
+### 8. Add Route
 
 Add the dashboard route to your router:
 
@@ -353,7 +169,7 @@ Add the dashboard route to your router:
 } />
 ```
 
-### 8. Submit for AI Review
+### 9. Submit for AI Review
 
 ```bash
 git add .
@@ -366,17 +182,24 @@ git push -u origin task-4.2-user-dashboard
 - [ ] Shows user's assigned tasks count
 - [ ] Shows completed/in-progress/overdue counts
 - [ ] Displays completion rate with visual indicator
-- [ ] Shows tasks due soon
-- [ ] Weekly progress chart
-- [ ] Recent activity feed
+- [ ] Shows tasks due soon (top 5)
+- [ ] Weekly progress chart (last 7 days)
+- [ ] Recent activity feed (placeholder)
 - [ ] Quick action buttons
-- [ ] Responsive layout
+- [ ] Responsive layout (mobile and desktop)
 
 ## Tips
 
 - Use meaningful stats that help users understand their progress
 - Make the dashboard visually appealing with colors and icons
 - Consider adding motivational messages for milestones
+- Use grid layout for responsiveness
+
+## Key Concepts
+
+**Data Aggregation:** Calculate statistics from raw task data
+**Data Visualization:** Present numbers in visual formats (charts, circles)
+**Responsive Grid:** Use CSS Grid for flexible layouts
 
 ---
 

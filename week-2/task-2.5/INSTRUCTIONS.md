@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [dnd-kit Documentation](https://dndkit.com/)
 
 ## Objective
@@ -42,7 +42,7 @@ git checkout -b task-2.5-drag-drop
 npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
 
-### 3. Create DraggableTaskCard
+### 3. Create Draggable Task Card
 
 Create `src/components/DraggableTaskCard.tsx`:
 
@@ -59,34 +59,21 @@ interface DraggableTaskCardProps {
 }
 
 export function DraggableTaskCard({ task, onClick, onDelete }: DraggableTaskCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // TODO: Create style object with transform and transition
+  // Hint: Use CSS.Transform.toString(transform)
+  // TODO: Set opacity to 0.5 when isDragging
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard
-        task={task}
-        onClick={onClick}
-        onDelete={onDelete}
-      />
+      <TaskCard task={task} onClick={onClick} onDelete={onDelete} />
     </div>
   );
 }
 ```
 
-### 4. Create DroppableColumn
+### 4. Create Droppable Column
 
 Create `src/components/DroppableColumn.tsx`:
 
@@ -103,104 +90,35 @@ interface DroppableColumnProps {
   onAddTask?: () => void;
 }
 
-export function DroppableColumn({
-  column,
-  taskIds,
-  children,
-  onAddTask,
-}: DroppableColumnProps) {
+export function DroppableColumn({ column, taskIds, children, onAddTask }: DroppableColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   return (
-    <div
-      className={`flex flex-col bg-gray-100 rounded-lg w-80 max-h-[calc(100vh-12rem)] ${
-        isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-      }`}
-    >
-      {/* Column Header */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: column.color }}
-          />
-          <h2 className="font-semibold text-gray-900 flex-1">{column.title}</h2>
-          <span className="px-2 py-0.5 text-sm font-medium text-gray-600 bg-gray-200 rounded-full">
-            {taskIds.length}
-          </span>
-        </div>
-      </div>
+    <div className={`flex flex-col bg-gray-100 rounded-lg w-80 ${isOver ? 'ring-2 ring-blue-500' : ''}`}>
+      {/* TODO: Add column header (copy from Column component) */}
 
-      {/* Sortable Task List */}
       <div ref={setNodeRef} className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[100px]">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
       </div>
 
-      {/* Add Task Button */}
-      {onAddTask && (
-        <div className="p-3 border-t border-gray-200">
-          <button
-            onClick={onAddTask}
-            className="w-full py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors flex items-center justify-center gap-1"
-          >
-            + Add Task
-          </button>
-        </div>
-      )}
+      {/* TODO: Add "Add Task" button */}
     </div>
   );
 }
 ```
 
-### 5. Create DragOverlay Component
-
-Create `src/components/TaskDragOverlay.tsx`:
-
-```tsx
-import { DragOverlay } from '@dnd-kit/core';
-import { Task } from '../types/task';
-import { TaskCard } from './TaskCard';
-
-interface TaskDragOverlayProps {
-  activeTask: Task | null;
-}
-
-export function TaskDragOverlay({ activeTask }: TaskDragOverlayProps) {
-  return (
-    <DragOverlay>
-      {activeTask && (
-        <div className="shadow-lg rotate-3">
-          <TaskCard task={activeTask} />
-        </div>
-      )}
-    </DragOverlay>
-  );
-}
-```
-
-### 6. Update Board with DndContext
+### 5. Update Board with DndContext
 
 Update `src/components/Board.tsx`:
 
 ```tsx
 import { useState } from 'react';
-import {
-  DndContext,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverEvent,
-  closestCorners,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useBoard } from '../context/BoardContext';
 import { DroppableColumn } from './DroppableColumn';
 import { DraggableTaskCard } from './DraggableTaskCard';
-import { TaskDragOverlay } from './TaskDragOverlay';
 import { Task } from '../types/task';
 
 export function Board() {
@@ -209,99 +127,32 @@ export function Board() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 10, // 10px movement before drag starts
-      },
+      activationConstraint: { distance: 10 }, // 10px movement before drag starts
     })
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const task = state.tasks[active.id as string];
-    setActiveTask(task || null);
+    // TODO: Set activeTask from event.active.id
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveTask(null);
-
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    const activeTask = state.tasks[activeId];
-    if (!activeTask) return;
-
-    // Find the target column
-    const overColumn = state.columns.find(
-      (col) => col.id === overId || col.taskIds.includes(overId)
-    );
-
-    if (!overColumn) return;
-
-    // If dropped in a different column
-    if (activeTask.columnId !== overColumn.id) {
-      moveTask(activeId, activeTask.columnId, overColumn.id);
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    const activeTask = state.tasks[activeId];
-    if (!activeTask) return;
-
-    // Find columns
-    const activeColumn = state.columns.find((col) => col.id === activeTask.columnId);
-    const overColumn = state.columns.find(
-      (col) => col.id === overId || col.taskIds.includes(overId)
-    );
-
-    if (!activeColumn || !overColumn || activeColumn.id === overColumn.id) {
-      return;
-    }
-
-    // Move to new column
-    moveTask(activeId, activeColumn.id, overColumn.id);
+    // TODO: Clear activeTask
+    // TODO: Find target column from event.over
+    // TODO: Call moveTask if column changed
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-6 overflow-x-auto p-6 min-h-screen bg-gray-50">
-        {state.columns.map((column) => (
-          <DroppableColumn
-            key={column.id}
-            column={column}
-            taskIds={column.taskIds}
-          >
-            {column.taskIds.map((taskId) => (
-              <DraggableTaskCard
-                key={taskId}
-                task={state.tasks[taskId]}
-              />
-            ))}
-          </DroppableColumn>
-        ))}
+        {/* TODO: Map columns and render DroppableColumn */}
+        {/* TODO: Inside each column, map taskIds and render DraggableTaskCard */}
       </div>
-
-      <TaskDragOverlay activeTask={activeTask} />
     </DndContext>
   );
 }
 ```
 
-### 7. Test Drag and Drop
+### 6. Test Drag and Drop
 
 1. Start the dev server
 2. Drag a task card
@@ -310,7 +161,7 @@ export function Board() {
 5. Test reordering within a column
 6. Test on touch device (if available)
 
-### 8. Submit Your PR
+### 7. Submit Your PR
 
 ```bash
 git add .
@@ -332,12 +183,22 @@ git push -u origin task-2.5-drag-drop
 1. Add reordering within columns
 2. Add keyboard drag support
 3. Add multi-select drag
+4. Add drag preview/overlay
 
 ## Tips
 
 - Use `closestCorners` for better drop detection
 - Add activation constraint to prevent accidental drags
 - The drag overlay creates a nicer visual effect
+- Test touch interactions on mobile device
+
+## Common Issues
+
+**Issue:** Drag doesn't start
+**Fix:** Check activationConstraint distance and sensor setup
+
+**Issue:** Task drops in wrong column
+**Fix:** Verify column.id matches in droppable and drop event
 
 ---
 

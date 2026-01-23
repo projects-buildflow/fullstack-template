@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Component Patterns](https://react.dev/learn)
 
 ## Objective
@@ -61,132 +61,82 @@ export interface Task {
 }
 ```
 
-### 3. Create Priority Badge Component
+### 3. Build Priority Badge Component
 
 Create `src/components/PriorityBadge.tsx`:
 
-```tsx
-import { Priority } from '../types/task';
+**Requirements:**
+- Accept `priority` prop (low | medium | high)
+- Display colored badge with priority label
+- Low = Green, Medium = Yellow, High = Red
+- Small rounded pill shape
 
-interface PriorityBadgeProps {
-  priority: Priority;
-}
+**Hint - Styling:**
+- Use Record<Priority, config> pattern from Button task
+- Badge classes: `px-2 py-1 text-xs font-medium rounded-full`
+- Low: `bg-green-100 text-green-800`
+- Medium: `bg-yellow-100 text-yellow-800`
+- High: `bg-red-100 text-red-800`
 
-const priorityConfig: Record<Priority, { label: string; className: string }> = {
-  low: {
-    label: 'Low',
-    className: 'bg-green-100 text-green-800',
-  },
-  medium: {
-    label: 'Medium',
-    className: 'bg-yellow-100 text-yellow-800',
-  },
-  high: {
-    label: 'High',
-    className: 'bg-red-100 text-red-800',
-  },
-};
-
-export function PriorityBadge({ priority }: PriorityBadgeProps) {
-  const config = priorityConfig[priority];
-
-  return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.className}`}>
-      {config.label}
-    </span>
-  );
-}
-```
-
-### 4. Create the TaskCard Component
+### 4. Build TaskCard Component
 
 Create `src/components/TaskCard.tsx`:
 
+**Props interface:**
 ```tsx
-import { Task } from '../types/task';
-import { PriorityBadge } from './PriorityBadge';
-
 interface TaskCardProps {
   task: Task;
   onClick?: () => void;
 }
-
-export function TaskCard({ task, onClick }: TaskCardProps) {
-  const { title, description, priority, assignee, dueDate, tags } = task;
-
-  return (
-    <div
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
-      onClick={onClick}
-    >
-      {/* Priority Badge */}
-      <div className="flex items-center justify-between mb-2">
-        <PriorityBadge priority={priority} />
-        {dueDate && (
-          <span className="text-xs text-gray-500">
-            {new Date(dueDate).toLocaleDateString()}
-          </span>
-        )}
-      </div>
-
-      {/* Title */}
-      <h3 className="font-medium text-gray-900 mb-1">{title}</h3>
-
-      {/* Description */}
-      {description && (
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-          {description}
-        </p>
-      )}
-
-      {/* Tags */}
-      {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Assignee */}
-      {assignee && (
-        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-          {assignee.avatarUrl ? (
-            <img
-              src={assignee.avatarUrl}
-              alt={assignee.name}
-              className="w-6 h-6 rounded-full"
-            />
-          ) : (
-            <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-600">
-              {assignee.name.charAt(0)}
-            </div>
-          )}
-          <span className="text-sm text-gray-700">{assignee.name}</span>
-        </div>
-      )}
-    </div>
-  );
-}
 ```
 
-### 5. Add to Components Demo Page
+**Layout structure (build this in JSX):**
+```
+┌─────────────────────────┐
+│ [Priority]    [DueDate] │
+│                         │
+│ Task Title              │
+│ Task description text   │
+│ truncated at 2 lines... │
+│                         │
+│ [tag] [tag]             │
+│ ──────────────────────  │
+│ [Avatar] Assignee Name  │
+└─────────────────────────┘
+```
+
+**Requirements:**
+- White card with border and shadow
+- Shows PriorityBadge component
+- Display due date (formatted) if it exists
+- Title in bold
+- Description truncated to 2 lines (use Tailwind `line-clamp-2`)
+- Tags as small gray pills
+- Assignee with avatar or initials fallback
+- Hover effect (increase shadow)
+- Clickable (cursor-pointer)
+
+**Tailwind hints:**
+- Card: `bg-white rounded-lg shadow-sm border border-gray-200 p-4`
+- Hover: `hover:shadow-md transition-shadow`
+- Text truncation: `line-clamp-2`
+- Avatar fallback: Use first character of name in a circle
+
+**Destructure task props:**
+```tsx
+const { title, description, priority, assignee, dueDate, tags } = task;
+```
+
+### 5. Create Sample Data & Demo
 
 Update `src/pages/Components.tsx`:
 
+**Sample task object:**
 ```tsx
-import { TaskCard } from '../components/TaskCard';
-import { Task } from '../types/task';
-
 const sampleTask: Task = {
   id: '1',
   title: 'Design homepage mockup',
-  description: 'Create initial wireframes and high-fidelity mockups for the new homepage design.',
+  description: 'Create initial wireframes and high-fidelity mockups...',
   priority: 'high',
   assignee: {
     id: 'user-1',
@@ -198,22 +148,26 @@ const sampleTask: Task = {
   columnId: 'in-progress',
   createdAt: '2024-02-01',
 };
-
-// In your component:
-<section>
-  <h2 className="text-xl font-semibold mb-4">Task Card</h2>
-  <div className="max-w-sm">
-    <TaskCard task={sampleTask} onClick={() => console.log('Card clicked')} />
-  </div>
-</section>
 ```
+
+Display in a section with max-width constraint (cards should be ~320-384px wide).
+
+**Test all variations:**
+- Task with all fields
+- Task with no description
+- Task with no assignee
+- Task with no tags
+- Different priorities
 
 ### 6. Test Your Component
 
-1. Navigate to http://localhost:3000/components
-2. Verify the task card displays all information correctly
-3. Test hover effect
-4. Check priority badge colors for all priorities
+Navigate to http://localhost:3000/components and verify:
+- Priority badges show correct colors
+- Description truncates at 2 lines
+- Due date formats correctly
+- Avatar fallback shows initials when no avatarUrl
+- Hover effect works
+- onClick is called when card is clicked
 
 ### 7. Submit Your PR
 

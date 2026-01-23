@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
 ## Objective
@@ -63,97 +63,37 @@ Create `server/db/schema.sql`:
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  avatar_url VARCHAR(500),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- TODO: Create users table
+-- Should have: id (UUID PK), email (unique), password_hash, name, avatar_url, created_at, updated_at
+-- HINT: Use uuid_generate_v4() for auto-generating UUIDs
 
--- Boards table
-CREATE TABLE boards (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  is_archived BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- TODO: Create boards table
+-- Should have: id (UUID PK), user_id (FK to users), title, description, is_archived, created_at, updated_at
+-- HINT: Use ON DELETE CASCADE for foreign keys
 
--- Columns table
-CREATE TABLE columns (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
-  title VARCHAR(255) NOT NULL,
-  color VARCHAR(7) DEFAULT '#6366f1', -- Hex color
-  position INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- TODO: Create columns table
+-- Should have: id (UUID PK), board_id (FK to boards), title, color, position, created_at, updated_at
+-- HINT: position helps with ordering columns
 
--- Tasks table
-CREATE TABLE tasks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  column_id UUID NOT NULL REFERENCES columns(id) ON DELETE CASCADE,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
-  assignee_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  due_date DATE,
-  position INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- TODO: Create tasks table
+-- Should have: id (UUID PK), column_id (FK to columns), title, description, priority, assignee_id (FK to users), due_date, position, created_at, updated_at
+-- HINT: Use CHECK constraint for priority values ('low', 'medium', 'high')
 
--- Tags table (for task labels)
-CREATE TABLE tags (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
-  name VARCHAR(50) NOT NULL,
-  color VARCHAR(7) DEFAULT '#gray',
-  UNIQUE(board_id, name)
-);
+-- TODO: Create tags table (optional)
+-- Should have: id (UUID PK), board_id (FK to boards), name, color
 
--- Task-Tag junction table
-CREATE TABLE task_tags (
-  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
-  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
-  PRIMARY KEY (task_id, tag_id)
-);
+-- TODO: Create task_tags junction table (optional)
+-- Many-to-many relationship between tasks and tags
 
--- Indexes for performance
-CREATE INDEX idx_boards_user_id ON boards(user_id);
-CREATE INDEX idx_columns_board_id ON columns(board_id);
-CREATE INDEX idx_tasks_column_id ON tasks(column_id);
-CREATE INDEX idx_tasks_assignee_id ON tasks(assignee_id);
-CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+-- TODO: Add indexes for performance
+-- HINT: Index foreign keys and frequently queried columns (user_id, board_id, column_id, due_date)
 
--- Updated_at trigger function
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- TODO: Create updated_at trigger function
+-- This function should set updated_at to NOW() automatically
+-- HINT: CREATE OR REPLACE FUNCTION update_updated_at_column()
 
--- Apply trigger to all tables with updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_boards_updated_at BEFORE UPDATE ON boards
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_columns_updated_at BEFORE UPDATE ON columns
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- TODO: Apply triggers to all tables
+-- Example: CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 ```
 
 ### 4. Create Seed Data
@@ -161,32 +101,20 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 Create `server/db/seed.sql`:
 
 ```sql
--- Insert demo user
-INSERT INTO users (id, email, password_hash, name) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'demo@taskmaster.com', '$2b$10$demo', 'Demo User');
+-- TODO: Insert demo user
+-- Use fixed UUID for testing: '00000000-0000-0000-0000-000000000001'
+-- HINT: Password hash can be a placeholder for now
 
--- Insert demo board
-INSERT INTO boards (id, user_id, title, description) VALUES
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Project Alpha', 'Main project board');
+-- TODO: Insert demo board
+-- Link to the demo user
 
--- Insert default columns
-INSERT INTO columns (id, board_id, title, color, position) VALUES
-  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002', 'To Do', '#6366f1', 0),
-  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000002', 'In Progress', '#f59e0b', 1),
-  ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000002', 'Done', '#22c55e', 2);
+-- TODO: Insert default columns
+-- Create "To Do", "In Progress", "Done" columns with different colors
 
--- Insert sample tasks
-INSERT INTO tasks (column_id, title, description, priority, position) VALUES
-  ('00000000-0000-0000-0000-000000000003', 'Set up project repository', 'Initialize Git repo with proper structure', 'high', 0),
-  ('00000000-0000-0000-0000-000000000003', 'Design database schema', 'Create tables for users, boards, tasks', 'high', 1),
-  ('00000000-0000-0000-0000-000000000004', 'Build REST API', 'Implement CRUD endpoints', 'medium', 0),
-  ('00000000-0000-0000-0000-000000000005', 'Setup development environment', 'Install dependencies and configure tools', 'low', 0);
+-- TODO: Insert sample tasks
+-- Add a few tasks to different columns with various priorities
 
--- Insert tags
-INSERT INTO tags (board_id, name, color) VALUES
-  ('00000000-0000-0000-0000-000000000002', 'frontend', '#3b82f6'),
-  ('00000000-0000-0000-0000-000000000002', 'backend', '#10b981'),
-  ('00000000-0000-0000-0000-000000000002', 'urgent', '#ef4444');
+-- TODO: Insert sample tags (optional)
 ```
 
 ### 5. Create Database Connection
@@ -196,24 +124,14 @@ Create `server/db/index.js`:
 ```javascript
 const { Pool } = require('pg');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+// TODO: Create pool with DATABASE_URL from environment
+// HINT: Use process.env.DATABASE_URL
 
-// Test connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Database connection error:', err);
-  } else {
-    console.log('Database connected:', res.rows[0].now);
-  }
-});
+// TODO: Add connection test
+// Query 'SELECT NOW()' to verify connection
 
-module.exports = {
-  query: (text, params) => pool.query(text, params),
-  pool,
-};
+// TODO: Export query function and pool
+// module.exports = { query, pool };
 ```
 
 ### 6. Add Environment Variables
@@ -226,9 +144,9 @@ NODE_ENV=development
 PORT=3001
 ```
 
-### 7. Create ER Diagram
+### 7. Document Your Schema
 
-Document your schema with a diagram:
+Create an ER diagram showing relationships:
 
 ```
 ┌───────────┐       ┌───────────┐       ┌───────────┐       ┌───────────┐
@@ -270,7 +188,7 @@ git push -u origin task-3.1-database-schema
 ## Acceptance Criteria
 
 - [ ] Schema includes users, boards, columns, tasks tables
-- [ ] Proper foreign key relationships
+- [ ] Proper foreign key relationships with CASCADE
 - [ ] Indexes on frequently queried columns
 - [ ] Auto-updating timestamps with triggers
 - [ ] Seed data for testing
@@ -282,6 +200,14 @@ git push -u origin task-3.1-database-schema
 - Use UUIDs instead of auto-increment for distributed systems
 - Add `ON DELETE CASCADE` for clean deletions
 - Index foreign keys for JOIN performance
+- Keep the position field for drag-and-drop ordering
+
+## Key Concepts
+
+**Foreign Keys:** Link tables together (e.g., tasks.column_id references columns.id)
+**Indexes:** Speed up queries on frequently searched columns
+**Triggers:** Automatically update fields like updated_at
+**Constraints:** Enforce data rules (e.g., priority must be low/medium/high)
 
 ---
 

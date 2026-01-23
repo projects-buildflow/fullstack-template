@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Component Patterns](https://react.dev/learn/thinking-in-react)
 
 ## Objective
@@ -75,9 +75,8 @@ App
 | children | ReactNode | Column components |
 
 **Design Decisions:**
-- Uses flexbox with horizontal scroll for column layout
-- Columns have fixed width to maintain visual consistency
-- Background is subtle gray to make columns stand out
+- TODO: Document why you chose flexbox vs grid
+- TODO: Explain horizontal scroll approach
 
 ---
 
@@ -93,9 +92,8 @@ App
 | children | ReactNode | TaskCard components |
 
 **Design Decisions:**
-- Fixed width (320px) for consistent layout
-- Max height with scroll for many tasks
-- Color indicator for visual distinction
+- TODO: Why fixed width vs flexible?
+- TODO: Explain scrolling strategy
 
 ---
 
@@ -109,10 +107,8 @@ App
 | onClick | () => void | Callback when card clicked |
 
 **Design Decisions:**
-- Compact design to show many tasks
-- Priority badge for quick scanning
-- Description truncated to 2 lines
-- Hover effect for interactivity
+- TODO: How did you handle optional fields?
+- TODO: Why truncate description to 2 lines?
 
 ---
 
@@ -123,11 +119,6 @@ App
 | Prop | Type | Description |
 |------|------|-------------|
 | priority | Priority | 'low' \| 'medium' \| 'high' |
-
-**Design Decisions:**
-- Color-coded: green (low), yellow (medium), red (high)
-- Pill shape for visual distinction
-- Small size to not dominate card
 
 ---
 
@@ -142,16 +133,10 @@ App
 | isLoading | boolean | false | Show loading spinner |
 | disabled | boolean | false | Disable interaction |
 
-**Design Decisions:**
-- Three variants for different contexts
-- Loading state prevents double-clicks
-- Extends native button attributes
-
 ---
 
 ## Type Definitions
 
-### Task
 ```typescript
 interface Task {
   id: string;
@@ -164,10 +149,7 @@ interface Task {
   columnId: string;
   createdAt: string;
 }
-```
 
-### Column
-```typescript
 interface Column {
   id: string;
   title: string;
@@ -194,11 +176,11 @@ interface Column {
 - [ ] Connect to backend API
 ```
 
+**TODO:** Fill in the design decisions sections based on your implementation choices.
+
 ### 3. Create a Visual Diagram
 
-Create a simple diagram (can be ASCII or use a tool like Excalidraw/Figma).
-
-Save as `docs/component-diagram.png` or include ASCII in the markdown:
+Include an ASCII diagram in your documentation:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -223,6 +205,13 @@ Save as `docs/component-diagram.png` or include ASCII in the markdown:
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+Or create a visual diagram using:
+- Excalidraw (https://excalidraw.com)
+- Figma
+- Draw.io
+
+Save as `docs/component-diagram.png`
 
 ### 4. Submit Your PR
 
@@ -250,6 +239,8 @@ Create a PR with:
 - Focus on documenting decisions, not just code
 - Keep docs concise - they should be quick to read
 - Include "why" not just "what"
+- Use tables for prop documentation
+- Consider your future self reading this in 6 months
 
 ---
 

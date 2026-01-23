@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [JWT.io](https://jwt.io/)
 
 ## Objective
@@ -26,6 +26,33 @@ Implement authentication:
 - Auth context in React
 - Login/Register pages
 - Protected route component
+
+## JWT Authentication Flow
+
+```
+┌─────────┐                ┌─────────┐                ┌──────────┐
+│ Client  │                │  API    │                │ Database │
+└────┬────┘                └────┬────┘                └────┬─────┘
+     │                          │                          │
+     │ POST /auth/register      │                          │
+     ├─────────────────────────►│ Hash password            │
+     │  {email, password, name} ├─────────────────────────►│
+     │                          │ Create user              │
+     │                          │◄─────────────────────────┤
+     │                          │ Generate JWT             │
+     │◄─────────────────────────┤                          │
+     │ {user, token}            │                          │
+     │                          │                          │
+     │ GET /api/tasks           │                          │
+     │ Header: Bearer <token>   │                          │
+     ├─────────────────────────►│ Verify JWT               │
+     │                          │ Extract userId           │
+     │                          ├─────────────────────────►│
+     │                          │ Query user's tasks       │
+     │                          │◄─────────────────────────┤
+     │◄─────────────────────────┤                          │
+     │ {tasks: [...]}           │                          │
+```
 
 ## Steps
 
@@ -61,47 +88,21 @@ const JWT_EXPIRES_IN = '7d';
 // POST /api/auth/register
 router.post('/register', async (req, res, next) => {
   try {
-    const { email, password, name } = req.body;
+    // TODO: Get email, password, name from req.body
 
-    // Validation
-    if (!email || !password || !name) {
-      return res.status(400).json({
-        error: { message: 'Email, password, and name are required', status: 400 },
-      });
-    }
+    // TODO: Validate input (all fields required, password length >= 6)
 
-    if (password.length < 6) {
-      return res.status(400).json({
-        error: { message: 'Password must be at least 6 characters', status: 400 },
-      });
-    }
+    // TODO: Check if user already exists (query by email)
 
-    // Check if user exists
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({
-        error: { message: 'Email already registered', status: 409 },
-      });
-    }
+    // TODO: Hash password with bcrypt.hash(password, 10)
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
+    // TODO: Insert user into database
+    // INSERT INTO users (email, password_hash, name) VALUES (...) RETURNING id, email, name
 
-    // Create user
-    const result = await db.query(
-      'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name',
-      [email, passwordHash, name]
-    );
+    // TODO: Generate JWT token
+    // jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 
-    const user = result.rows[0];
-
-    // Generate token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.status(201).json({
-      user: { id: user.id, email: user.email, name: user.name },
-      token,
-    });
+    // TODO: Return 201 with { user, token }
   } catch (err) {
     next(err);
   }
@@ -110,43 +111,20 @@ router.post('/register', async (req, res, next) => {
 // POST /api/auth/login
 router.post('/login', async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    // TODO: Get email, password from req.body
 
-    if (!email || !password) {
-      return res.status(400).json({
-        error: { message: 'Email and password are required', status: 400 },
-      });
-    }
+    // TODO: Find user by email
+    // SELECT id, email, name, password_hash FROM users WHERE email = $1
 
-    // Find user
-    const result = await db.query(
-      'SELECT id, email, name, password_hash FROM users WHERE email = $1',
-      [email]
-    );
+    // TODO: If not found, return 401 'Invalid email or password'
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({
-        error: { message: 'Invalid email or password', status: 401 },
-      });
-    }
+    // TODO: Compare password with bcrypt.compare(password, user.password_hash)
 
-    const user = result.rows[0];
+    // TODO: If invalid, return 401
 
-    // Check password
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) {
-      return res.status(401).json({
-        error: { message: 'Invalid email or password', status: 401 },
-      });
-    }
+    // TODO: Generate JWT token
 
-    // Generate token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.json({
-      user: { id: user.id, email: user.email, name: user.name },
-      token,
-    });
+    // TODO: Return { user: { id, email, name }, token }
   } catch (err) {
     next(err);
   }
@@ -155,34 +133,18 @@ router.post('/login', async (req, res, next) => {
 // GET /api/auth/me - Get current user
 router.get('/me', async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({
-        error: { message: 'No token provided', status: 401 },
-      });
-    }
+    // TODO: Get Authorization header
+    // Check for 'Bearer <token>' format
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // TODO: Extract token and verify with jwt.verify(token, JWT_SECRET)
 
-    const result = await db.query(
-      'SELECT id, email, name, avatar_url FROM users WHERE id = $1',
-      [decoded.userId]
-    );
+    // TODO: Get userId from decoded token
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({
-        error: { message: 'User not found', status: 401 },
-      });
-    }
+    // TODO: Query user by id
 
-    res.json({ user: result.rows[0] });
+    // TODO: Return { user }
   } catch (err) {
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        error: { message: 'Invalid token', status: 401 },
-      });
-    }
+    // TODO: Handle JsonWebTokenError -> return 401 'Invalid token'
     next(err);
   }
 });
@@ -199,24 +161,20 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
+  // TODO: Get Authorization header
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({
-      error: { message: 'Authorization required', status: 401 },
-    });
-  }
+  // TODO: Check for 'Bearer ' prefix
+  // If missing, return 401 'Authorization required'
 
-  try {
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.userId = decoded.userId;
-    next();
-  } catch (err) {
-    return res.status(401).json({
-      error: { message: 'Invalid or expired token', status: 401 },
-    });
-  }
+  // TODO: Extract token (split by space, take second part)
+
+  // TODO: Verify token with jwt.verify()
+
+  // TODO: Add userId to req object (req.userId = decoded.userId)
+
+  // TODO: Call next() to continue
+
+  // TODO: Catch errors and return 401 'Invalid or expired token'
 }
 
 module.exports = authMiddleware;
@@ -232,10 +190,10 @@ const authMiddleware = require('./middleware/auth');
 // Public routes
 app.use('/api/auth', require('./routes/auth'));
 
-// Protected routes
-app.use('/api/tasks', authMiddleware, require('./routes/tasks'));
-app.use('/api/columns', authMiddleware, require('./routes/columns'));
-app.use('/api/boards', authMiddleware, require('./routes/boards'));
+// TODO: Protect these routes with authMiddleware
+// app.use('/api/tasks', authMiddleware, require('./routes/tasks'));
+// app.use('/api/columns', authMiddleware, require('./routes/columns'));
+// app.use('/api/boards', authMiddleware, require('./routes/boards'));
 ```
 
 ### 6. Create Auth Context (Frontend)
@@ -261,8 +219,6 @@ interface AuthContextValue {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() =>
@@ -270,46 +226,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check token on mount
+  // TODO: Check token on mount
   useEffect(() => {
     async function checkAuth() {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { user } = await api.getMe(token);
-        setUser(user);
-      } catch {
-        localStorage.removeItem('token');
-        setToken(null);
-      } finally {
-        setIsLoading(false);
-      }
+      // If no token, set isLoading false and return
+      // Try to fetch current user with token
+      // If successful, set user
+      // If error, clear token from localStorage
+      // Set isLoading false
     }
-
     checkAuth();
   }, [token]);
 
   const login = async (email: string, password: string) => {
-    const { user, token } = await api.login(email, password);
-    localStorage.setItem('token', token);
-    setToken(token);
-    setUser(user);
+    // TODO: Call api.login(email, password)
+    // Save token to localStorage
+    // Update token and user state
   };
 
   const register = async (email: string, password: string, name: string) => {
-    const { user, token } = await api.register(email, password, name);
-    localStorage.setItem('token', token);
-    setToken(token);
-    setUser(user);
+    // TODO: Call api.register(email, password, name)
+    // Save token to localStorage
+    // Update token and user state
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
+    // TODO: Clear token from localStorage
+    // Reset token and user to null
   };
 
   return (
@@ -317,14 +260,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }
 ```
 
@@ -340,23 +275,17 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-    </div>;
-  }
+  // TODO: Show loading spinner if isLoading
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+  // TODO: Redirect to /login if no user (save current location in state)
 
-  return <>{children}</>;
+  // TODO: Render children if authenticated
 }
 ```
 
 ### 8. Create Login Page
 
-Create `src/pages/Login.tsx` (simplified):
+Create `src/pages/Login.tsx`:
 
 ```tsx
 import { useState, FormEvent } from 'react';
@@ -373,23 +302,15 @@ export function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      navigate('/');
+      // TODO: Call login(email, password)
+      // Navigate to '/' on success
     } catch (err) {
-      setError('Invalid email or password');
+      // TODO: Set error message
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm p-6">
-        <h1 className="text-2xl font-bold mb-6">Sign In</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {/* Form fields... */}
-        <Link to="/register">Create an account</Link>
-      </form>
-    </div>
-  );
+  // TODO: Render form with email and password inputs
+  // Include link to /register
 }
 ```
 
@@ -410,14 +331,30 @@ git push -u origin task-3.5-authentication
 - [ ] AuthContext manages user state
 - [ ] ProtectedRoute redirects unauthenticated users
 - [ ] Token persisted in localStorage
+- [ ] Password is hashed with bcrypt (NEVER stored plain)
 
 ## Tips
 
-- Never store plain passwords - always hash
-- Use httpOnly cookies for production (more secure)
+- Never store plain passwords - always hash with bcrypt
+- Use strong JWT_SECRET in production (long random string)
+- httpOnly cookies are more secure than localStorage (but harder to implement)
 - Add token refresh mechanism for long sessions
+- Consider adding "Remember Me" functionality
+
+## Security Notes
+
+**DO:**
+- Hash passwords with bcrypt
+- Use environment variables for secrets
+- Validate all input
+- Return generic errors for auth failures
+
+**DON'T:**
+- Store passwords in plain text
+- Commit secrets to git
+- Return specific error messages (e.g., "email not found" vs "invalid credentials")
 
 ---
 
 **Previous Task:** [Task 3.4: Add Error Handling](../task-3.4/INSTRUCTIONS.md)
-**Next Task:** [Task 3.6: API Documentation](../task-3.6/INSTRUCTIONS.md)
+**Next Task:** [Task 4.1: Add Search & Filter](../../week-4/task-4.1/INSTRUCTIONS.md)

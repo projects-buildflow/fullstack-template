@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Flexbox Guide](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
 
 ## Objective
@@ -72,60 +72,28 @@ interface ColumnProps {
 export function Column({ column, taskCount, onAddTask, children }: ColumnProps) {
   return (
     <div className="flex flex-col bg-gray-100 rounded-lg w-80 max-h-[calc(100vh-12rem)]">
-      {/* Column Header */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          {/* Color Indicator */}
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: column.color }}
-          />
+      {/* TODO: Add column header with color indicator and task count */}
+      {/* Hint: Use flexbox with gap-2 for layout */}
+      {/* Hint: Color indicator should be w-3 h-3 rounded-full */}
 
-          {/* Title */}
-          <h2 className="font-semibold text-gray-900 flex-1">
-            {column.title}
-          </h2>
+      {/* TODO: Add scrollable task list */}
+      {/* Hint: Use flex-1 overflow-y-auto for scroll area */}
+      {/* Hint: Space tasks with space-y-3 */}
 
-          {/* Task Count */}
-          <span className="px-2 py-0.5 text-sm font-medium text-gray-600 bg-gray-200 rounded-full">
-            {taskCount}
-          </span>
-        </div>
-      </div>
-
-      {/* Task List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {children}
-      </div>
-
-      {/* Add Task Button */}
-      {onAddTask && (
-        <div className="p-3 border-t border-gray-200">
-          <button
-            onClick={onAddTask}
-            className="w-full py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors flex items-center justify-center gap-1"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Add Task
-          </button>
-        </div>
-      )}
+      {/* TODO: Add "Add Task" button */}
+      {/* Hint: Only render if onAddTask prop is provided */}
+      {/* Hint: Include a plus icon SVG or text */}
     </div>
   );
 }
 ```
+
+**Design Spec:**
+- Header: `p-3 border-b` with flex layout
+- Color dot: `w-3 h-3 rounded-full` with `style={{ backgroundColor: column.color }}`
+- Count badge: `px-2 py-0.5 text-sm bg-gray-200 rounded-full`
+- Task area: `flex-1 overflow-y-auto p-3`
+- Button: `w-full py-2 hover:bg-gray-200 rounded-md`
 
 ### 4. Create the Board Layout
 
@@ -139,11 +107,10 @@ interface BoardProps {
 }
 
 export function Board({ children }: BoardProps) {
-  return (
-    <div className="flex gap-6 overflow-x-auto p-6 min-h-screen bg-gray-50">
-      {children}
-    </div>
-  );
+  // TODO: Return a container with horizontal scroll
+  // Hint: Use flex gap-6 overflow-x-auto
+  // Hint: Add p-6 for padding and min-h-screen for height
+  // Hint: Background should be bg-gray-50
 }
 ```
 
@@ -157,74 +124,16 @@ import { Column } from '../components/Column';
 import { TaskCard } from '../components/TaskCard';
 import { Column as ColumnType, Task } from '../types/task';
 
-const sampleColumns: ColumnType[] = [
-  { id: 'todo', title: 'To Do', color: '#6366f1', taskIds: ['1', '2'] },
-  { id: 'in-progress', title: 'In Progress', color: '#f59e0b', taskIds: ['3'] },
-  { id: 'done', title: 'Done', color: '#22c55e', taskIds: ['4', '5'] },
-];
+// TODO: Create sample columns array with 3 columns
+// Example: { id: 'todo', title: 'To Do', color: '#6366f1', taskIds: ['1', '2'] }
 
-const sampleTasks: Record<string, Task> = {
-  '1': {
-    id: '1',
-    title: 'Set up project repository',
-    description: 'Initialize the Git repo with proper structure',
-    priority: 'high',
-    columnId: 'todo',
-    createdAt: '2024-02-01',
-  },
-  '2': {
-    id: '2',
-    title: 'Design database schema',
-    priority: 'medium',
-    columnId: 'todo',
-    createdAt: '2024-02-01',
-  },
-  '3': {
-    id: '3',
-    title: 'Implement user authentication',
-    description: 'Add login/register with JWT',
-    priority: 'high',
-    assignee: { id: '1', name: 'Jordan' },
-    columnId: 'in-progress',
-    createdAt: '2024-02-01',
-  },
-  '4': {
-    id: '4',
-    title: 'Create component library',
-    priority: 'low',
-    columnId: 'done',
-    createdAt: '2024-02-01',
-  },
-  '5': {
-    id: '5',
-    title: 'Write API documentation',
-    priority: 'low',
-    columnId: 'done',
-    createdAt: '2024-02-01',
-  },
-};
+// TODO: Create sample tasks object (Record<string, Task>)
+// Use tasks from previous demos
 
 export function BoardDemo() {
-  return (
-    <Board>
-      {sampleColumns.map((column) => (
-        <Column
-          key={column.id}
-          column={column}
-          taskCount={column.taskIds.length}
-          onAddTask={() => console.log('Add task to', column.title)}
-        >
-          {column.taskIds.map((taskId) => (
-            <TaskCard
-              key={taskId}
-              task={sampleTasks[taskId]}
-              onClick={() => console.log('Clicked task', taskId)}
-            />
-          ))}
-        </Column>
-      ))}
-    </Board>
-  );
+  // TODO: Map over columns and render Column components
+  // TODO: For each column, map over taskIds and render TaskCards
+  // Hint: Use nested .map() calls
 }
 ```
 
@@ -265,6 +174,15 @@ git push -u origin task-1.5-column-component
 - Use `max-h-[calc(100vh-12rem)]` to constrain column height
 - `overflow-x-auto` on Board enables horizontal scrolling
 - Fixed width columns look better on Kanban boards
+- Check previous TaskCard implementation for styling consistency
+
+## Common Issues
+
+**Issue:** Columns not scrolling horizontally
+**Fix:** Ensure Board has `overflow-x-auto` and columns have fixed width
+
+**Issue:** Task list not scrolling
+**Fix:** Parent needs `max-h-[...]` and task area needs `overflow-y-auto`
 
 ---
 

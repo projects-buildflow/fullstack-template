@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Debounce Pattern](https://usehooks.com/useDebounce/)
 
 ## Objective
@@ -37,17 +37,16 @@ git pull origin main
 git checkout -b task-4.1-search-filter
 ```
 
-### 2. Create Search and Filter Bar
+### 2. Create Filter Interface
 
 Create `src/components/SearchFilterBar.tsx`:
 
 ```tsx
 import { useState, useEffect } from 'react';
-import { Priority } from '../types/task';
 
 interface Filters {
   search: string;
-  priority: Priority | 'all';
+  priority: 'all' | 'low' | 'medium' | 'high';
   assigneeId: string | 'all';
   dueDateRange: 'all' | 'overdue' | 'today' | 'week' | 'month';
 }
@@ -65,118 +64,25 @@ export function SearchFilterBar({ onFiltersChange, assignees }: SearchFilterBarP
     dueDateRange: 'all',
   });
 
-  // Debounce search
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // TODO: Implement debounce for search
+  // Create debouncedSearch state
+  // Use useEffect with setTimeout to delay search by 300ms
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(filters.search);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [filters.search]);
+  // TODO: Call onFiltersChange when any filter changes
 
-  useEffect(() => {
-    onFiltersChange({ ...filters, search: debouncedSearch });
-  }, [debouncedSearch, filters.priority, filters.assigneeId, filters.dueDateRange]);
+  // TODO: Render search input with icon
+  // placeholder="Search tasks..."
 
-  const updateFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+  // TODO: Render priority dropdown
+  // Options: All Priorities, High, Medium, Low
 
-  const clearFilters = () => {
-    setFilters({
-      search: '',
-      priority: 'all',
-      assigneeId: 'all',
-      dueDateRange: 'all',
-    });
-  };
+  // TODO: Render assignee dropdown
+  // Options: All Assignees, Unassigned, then map over assignees
 
-  const hasActiveFilters =
-    filters.search ||
-    filters.priority !== 'all' ||
-    filters.assigneeId !== 'all' ||
-    filters.dueDateRange !== 'all';
+  // TODO: Render due date dropdown
+  // Options: All Dates, Overdue, Due Today, Due This Week, Due This Month
 
-  return (
-    <div className="bg-white border-b px-6 py-4">
-      <div className="flex flex-wrap gap-4 items-center">
-        {/* Search Input */}
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={filters.search}
-            onChange={(e) => updateFilter('search', e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </div>
-
-        {/* Priority Filter */}
-        <select
-          value={filters.priority}
-          onChange={(e) => updateFilter('priority', e.target.value as Priority | 'all')}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Priorities</option>
-          <option value="high">High Priority</option>
-          <option value="medium">Medium Priority</option>
-          <option value="low">Low Priority</option>
-        </select>
-
-        {/* Assignee Filter */}
-        <select
-          value={filters.assigneeId}
-          onChange={(e) => updateFilter('assigneeId', e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Assignees</option>
-          <option value="unassigned">Unassigned</option>
-          {assignees.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.name}
-            </option>
-          ))}
-        </select>
-
-        {/* Due Date Filter */}
-        <select
-          value={filters.dueDateRange}
-          onChange={(e) => updateFilter('dueDateRange', e.target.value as Filters['dueDateRange'])}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Dates</option>
-          <option value="overdue">Overdue</option>
-          <option value="today">Due Today</option>
-          <option value="week">Due This Week</option>
-          <option value="month">Due This Month</option>
-        </select>
-
-        {/* Clear Filters */}
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            Clear Filters
-          </button>
-        )}
-      </div>
-    </div>
-  );
+  // TODO: Add "Clear Filters" button when filters active
 }
 ```
 
@@ -198,57 +104,18 @@ interface Filters {
 export function useFilteredTasks(tasks: Task[], filters: Filters): Task[] {
   return useMemo(() => {
     return tasks.filter((task) => {
-      // Search filter
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesSearch =
-          task.title.toLowerCase().includes(searchLower) ||
-          (task.description?.toLowerCase().includes(searchLower) ?? false);
-        if (!matchesSearch) return false;
-      }
+      // TODO: Filter by search text
+      // Check if title or description includes search (case-insensitive)
 
-      // Priority filter
-      if (filters.priority !== 'all' && task.priority !== filters.priority) {
-        return false;
-      }
+      // TODO: Filter by priority
+      // Skip if priority is 'all'
 
-      // Assignee filter
-      if (filters.assigneeId !== 'all') {
-        if (filters.assigneeId === 'unassigned' && task.assignee_id) {
-          return false;
-        }
-        if (filters.assigneeId !== 'unassigned' && task.assignee_id !== filters.assigneeId) {
-          return false;
-        }
-      }
+      // TODO: Filter by assignee
+      // Handle 'all' and 'unassigned' cases
 
-      // Due date filter
-      if (filters.dueDateRange !== 'all' && task.due_date) {
-        const dueDate = new Date(task.due_date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const endOfWeek = new Date(today);
-        endOfWeek.setDate(today.getDate() + 7);
-
-        const endOfMonth = new Date(today);
-        endOfMonth.setMonth(today.getMonth() + 1);
-
-        switch (filters.dueDateRange) {
-          case 'overdue':
-            if (dueDate >= today) return false;
-            break;
-          case 'today':
-            if (dueDate.toDateString() !== today.toDateString()) return false;
-            break;
-          case 'week':
-            if (dueDate < today || dueDate > endOfWeek) return false;
-            break;
-          case 'month':
-            if (dueDate < today || dueDate > endOfMonth) return false;
-            break;
-        }
-      }
+      // TODO: Filter by due date range
+      // Calculate date ranges for overdue, today, week, month
+      // HINT: Use new Date() and comparison operators
 
       return true;
     });
@@ -261,7 +128,7 @@ export function useFilteredTasks(tasks: Task[], filters: Filters): Task[] {
 Update `src/components/Board.tsx`:
 
 ```tsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { SearchFilterBar } from './SearchFilterBar';
 import { useFilteredTasks } from '../hooks/useFilteredTasks';
 
@@ -274,27 +141,17 @@ export function Board() {
     dueDateRange: 'all' as const,
   });
 
-  // Convert tasks object to array
-  const allTasks = Object.values(state.tasks);
-  const filteredTasks = useFilteredTasks(allTasks, filters);
+  // TODO: Convert tasks object to array
 
-  // Get unique assignees
-  const assignees = useMemo(() => {
-    const uniqueAssignees = new Map();
-    allTasks.forEach((task) => {
-      if (task.assignee_id && task.assignee_name) {
-        uniqueAssignees.set(task.assignee_id, {
-          id: task.assignee_id,
-          name: task.assignee_name,
-        });
-      }
-    });
-    return Array.from(uniqueAssignees.values());
-  }, [allTasks]);
+  // TODO: Get filtered tasks with useFilteredTasks hook
 
-  // Filter tasks by column
-  const getColumnTasks = (columnId: string) =>
-    filteredTasks.filter((task) => task.column_id === columnId);
+  // TODO: Get unique assignees from tasks
+  // Use Set or Map to deduplicate
+
+  // TODO: Filter tasks by column
+  const getColumnTasks = (columnId: string) => {
+    // Return filtered tasks for this column
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -302,48 +159,27 @@ export function Board() {
         onFiltersChange={setFilters}
         assignees={assignees}
       />
+
+      {/* TODO: Show filtered count if filters active */}
+
       <div className="flex-1 flex gap-6 overflow-x-auto p-6">
-        {state.columns.map((column) => {
-          const columnTasks = getColumnTasks(column.id);
-          return (
-            <Column
-              key={column.id}
-              column={column}
-              taskCount={columnTasks.length}
-            >
-              {columnTasks.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </Column>
-          );
-        })}
+        {/* TODO: Render columns with filtered tasks */}
       </div>
     </div>
   );
 }
 ```
 
-### 5. Add Filter Results Indicator
-
-Show how many tasks match the current filters:
-
-```tsx
-{hasActiveFilters && (
-  <p className="text-sm text-gray-500 mt-2">
-    Showing {filteredTasks.length} of {allTasks.length} tasks
-  </p>
-)}
-```
-
-### 6. Test Filters
+### 5. Test Filters
 
 1. Search for a task title
 2. Filter by high priority
 3. Combine search with priority filter
 4. Filter by assignee
 5. Filter by due date
+6. Clear all filters
 
-### 7. Submit Your PR
+### 6. Submit Your PR
 
 ```bash
 git add .
@@ -353,22 +189,29 @@ git push -u origin task-4.1-search-filter
 
 ## Acceptance Criteria
 
-- [ ] Search filters tasks by title and description
+- [ ] Search filters tasks by title and description (case-insensitive)
 - [ ] Priority filter works correctly
 - [ ] Assignee filter includes "Unassigned" option
 - [ ] Due date range filter works (overdue, today, week, month)
-- [ ] Multiple filters combine correctly
-- [ ] Search is debounced (300ms)
+- [ ] Multiple filters combine correctly (AND logic)
+- [ ] Search is debounced (300ms delay)
 - [ ] Clear filters button resets all
-- [ ] Shows filtered count
+- [ ] Shows filtered count when active
 
 ## Tips
 
 - Use `useMemo` to avoid re-filtering on every render
 - Debounce search to avoid too many filter operations
+- Combine filters with AND logic (all must match)
 - Consider adding URL params for shareable filtered views
+
+## Key Concepts
+
+**Debouncing:** Delay function execution until user stops typing
+**useMemo:** Cache expensive computations
+**Filter Composition:** Combine multiple filters with AND logic
 
 ---
 
-**Previous Task:** [Task 3.6: API Documentation](../../week-3/task-3.6/INSTRUCTIONS.md)
+**Previous Task:** [Task 3.5: Implement User Authentication](../../week-3/task-3.5/INSTRUCTIONS.md)
 **Next Task:** [Task 4.2: Build User Dashboard](../task-4.2/INSTRUCTIONS.md)

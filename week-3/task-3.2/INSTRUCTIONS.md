@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Express.js Guide](https://expressjs.com/en/guide/routing.html)
 
 ## Objective
@@ -57,50 +57,27 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// TODO: Add middleware
+// HINT: app.use(cors()), app.use(express.json())
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
+// TODO: Add request logging middleware
+// Log method and path for each request
 
-// Routes
-app.use('/api/tasks', require('./routes/tasks'));
-app.use('/api/columns', require('./routes/columns'));
-app.use('/api/boards', require('./routes/boards'));
+// TODO: Mount routes
+// app.use('/api/tasks', require('./routes/tasks'));
+// app.use('/api/columns', require('./routes/columns'));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// TODO: Add health check endpoint
+// GET /health should return { status: 'ok', timestamp: ... }
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal server error',
-      status: err.status || 500,
-    },
-  });
-});
+// TODO: Add error handling middleware
+// Catch errors and return consistent JSON format
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: {
-      message: 'Not found',
-      status: 404,
-    },
-  });
-});
+// TODO: Add 404 handler
+// Return { error: { message: 'Not found', status: 404 } }
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// TODO: Start server
+// app.listen(PORT, ...)
 ```
 
 ### 4. Create Tasks Router
@@ -115,24 +92,16 @@ const db = require('../db');
 // GET /api/tasks - Get all tasks (with optional column filter)
 router.get('/', async (req, res, next) => {
   try {
-    const { column_id } = req.query;
+    // TODO: Get column_id from query params
 
-    let query = `
-      SELECT t.*, u.name as assignee_name, u.avatar_url as assignee_avatar
-      FROM tasks t
-      LEFT JOIN users u ON t.assignee_id = u.id
-    `;
-    const params = [];
+    // TODO: Build SQL query
+    // SELECT t.*, u.name as assignee_name FROM tasks t
+    // LEFT JOIN users u ON t.assignee_id = u.id
+    // Add WHERE clause if column_id provided
 
-    if (column_id) {
-      query += ' WHERE t.column_id = $1';
-      params.push(column_id);
-    }
+    // TODO: Execute query with db.query()
 
-    query += ' ORDER BY t.position ASC';
-
-    const result = await db.query(query, params);
-    res.json({ tasks: result.rows });
+    // TODO: Return { tasks: result.rows }
   } catch (err) {
     next(err);
   }
@@ -141,22 +110,13 @@ router.get('/', async (req, res, next) => {
 // GET /api/tasks/:id - Get single task
 router.get('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const result = await db.query(
-      `SELECT t.*, u.name as assignee_name, u.avatar_url as assignee_avatar
-       FROM tasks t
-       LEFT JOIN users u ON t.assignee_id = u.id
-       WHERE t.id = $1`,
-      [id]
-    );
+    // TODO: Get id from req.params
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: { message: 'Task not found', status: 404 },
-      });
-    }
+    // TODO: Query task by id with JOIN to users
 
-    res.json({ task: result.rows[0] });
+    // TODO: If not found, return 404
+
+    // TODO: Return { task: result.rows[0] }
   } catch (err) {
     next(err);
   }
@@ -165,30 +125,18 @@ router.get('/:id', async (req, res, next) => {
 // POST /api/tasks - Create new task
 router.post('/', async (req, res, next) => {
   try {
-    const { column_id, title, description, priority, assignee_id, due_date } = req.body;
+    // TODO: Destructure column_id, title, description, priority, assignee_id, due_date from req.body
 
-    // Validation
-    if (!column_id || !title) {
-      return res.status(400).json({
-        error: { message: 'column_id and title are required', status: 400 },
-      });
-    }
+    // TODO: Validate required fields (column_id, title)
+    // Return 400 if missing
 
-    // Get max position in column
-    const posResult = await db.query(
-      'SELECT COALESCE(MAX(position), -1) + 1 as next_pos FROM tasks WHERE column_id = $1',
-      [column_id]
-    );
-    const position = posResult.rows[0].next_pos;
+    // TODO: Get max position for the column
+    // SELECT COALESCE(MAX(position), -1) + 1 as next_pos FROM tasks WHERE column_id = $1
 
-    const result = await db.query(
-      `INSERT INTO tasks (column_id, title, description, priority, assignee_id, due_date, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [column_id, title, description, priority || 'medium', assignee_id, due_date, position]
-    );
+    // TODO: Insert new task with calculated position
+    // INSERT INTO tasks (...) VALUES (...) RETURNING *
 
-    res.status(201).json({ task: result.rows[0] });
+    // TODO: Return 201 with { task: result.rows[0] }
   } catch (err) {
     next(err);
   }
@@ -197,32 +145,14 @@ router.post('/', async (req, res, next) => {
 // PUT /api/tasks/:id - Update task
 router.put('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { title, description, priority, assignee_id, due_date, column_id, position } = req.body;
+    // TODO: Get id from params and updates from body
 
-    // Check task exists
-    const existing = await db.query('SELECT * FROM tasks WHERE id = $1', [id]);
-    if (existing.rows.length === 0) {
-      return res.status(404).json({
-        error: { message: 'Task not found', status: 404 },
-      });
-    }
+    // TODO: Check if task exists
 
-    const result = await db.query(
-      `UPDATE tasks SET
-        title = COALESCE($1, title),
-        description = COALESCE($2, description),
-        priority = COALESCE($3, priority),
-        assignee_id = $4,
-        due_date = $5,
-        column_id = COALESCE($6, column_id),
-        position = COALESCE($7, position)
-       WHERE id = $8
-       RETURNING *`,
-      [title, description, priority, assignee_id, due_date, column_id, position, id]
-    );
+    // TODO: Update task with COALESCE for optional fields
+    // UPDATE tasks SET title = COALESCE($1, title), ... WHERE id = $8 RETURNING *
 
-    res.json({ task: result.rows[0] });
+    // TODO: Return { task: result.rows[0] }
   } catch (err) {
     next(err);
   }
@@ -231,20 +161,12 @@ router.put('/:id', async (req, res, next) => {
 // DELETE /api/tasks/:id - Delete task
 router.delete('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
+    // TODO: Delete task and return deleted row
+    // DELETE FROM tasks WHERE id = $1 RETURNING *
 
-    const result = await db.query(
-      'DELETE FROM tasks WHERE id = $1 RETURNING *',
-      [id]
-    );
+    // TODO: If no rows, return 404
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: { message: 'Task not found', status: 404 },
-      });
-    }
-
-    res.json({ message: 'Task deleted', task: result.rows[0] });
+    // TODO: Return success message
   } catch (err) {
     next(err);
   }
@@ -253,27 +175,11 @@ router.delete('/:id', async (req, res, next) => {
 // PATCH /api/tasks/:id/move - Move task to different column
 router.patch('/:id/move', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { column_id, position } = req.body;
+    // TODO: Get column_id and position from body
 
-    if (!column_id) {
-      return res.status(400).json({
-        error: { message: 'column_id is required', status: 400 },
-      });
-    }
+    // TODO: Update task's column_id and position
 
-    const result = await db.query(
-      `UPDATE tasks SET column_id = $1, position = $2 WHERE id = $3 RETURNING *`,
-      [column_id, position || 0, id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: { message: 'Task not found', status: 404 },
-      });
-    }
-
-    res.json({ task: result.rows[0] });
+    // TODO: Return updated task
   } catch (err) {
     next(err);
   }
@@ -294,19 +200,11 @@ const db = require('../db');
 // GET /api/columns?board_id=xxx
 router.get('/', async (req, res, next) => {
   try {
-    const { board_id } = req.query;
-    if (!board_id) {
-      return res.status(400).json({
-        error: { message: 'board_id is required', status: 400 },
-      });
-    }
+    // TODO: Require board_id query param (400 if missing)
 
-    const result = await db.query(
-      'SELECT * FROM columns WHERE board_id = $1 ORDER BY position ASC',
-      [board_id]
-    );
+    // TODO: Query columns for board, ordered by position
 
-    res.json({ columns: result.rows });
+    // TODO: Return { columns: result.rows }
   } catch (err) {
     next(err);
   }
@@ -315,25 +213,13 @@ router.get('/', async (req, res, next) => {
 // POST /api/columns
 router.post('/', async (req, res, next) => {
   try {
-    const { board_id, title, color } = req.body;
+    // TODO: Get board_id, title, color from body
 
-    if (!board_id || !title) {
-      return res.status(400).json({
-        error: { message: 'board_id and title are required', status: 400 },
-      });
-    }
+    // TODO: Validate required fields
 
-    const posResult = await db.query(
-      'SELECT COALESCE(MAX(position), -1) + 1 as next_pos FROM columns WHERE board_id = $1',
-      [board_id]
-    );
+    // TODO: Get next position for board
 
-    const result = await db.query(
-      'INSERT INTO columns (board_id, title, color, position) VALUES ($1, $2, $3, $4) RETURNING *',
-      [board_id, title, color || '#6366f1', posResult.rows[0].next_pos]
-    );
-
-    res.status(201).json({ column: result.rows[0] });
+    // TODO: Insert column and return 201
   } catch (err) {
     next(err);
   }
@@ -385,7 +271,7 @@ git push -u origin task-3.2-rest-api
 
 - [ ] GET /api/tasks returns all tasks
 - [ ] GET /api/tasks/:id returns single task
-- [ ] POST /api/tasks creates new task
+- [ ] POST /api/tasks creates new task with validation
 - [ ] PUT /api/tasks/:id updates task
 - [ ] DELETE /api/tasks/:id deletes task
 - [ ] PATCH /api/tasks/:id/move changes column
@@ -394,9 +280,18 @@ git push -u origin task-3.2-rest-api
 
 ## Tips
 
-- Use COALESCE for partial updates
-- Return the modified resource after changes
-- Add proper HTTP status codes
+- Use COALESCE for partial updates in PUT requests
+- Always return the modified resource after changes
+- Add proper HTTP status codes (200, 201, 400, 404, 500)
+- Validate input before database operations
+
+## REST API Conventions
+
+- **GET** - Retrieve resource(s)
+- **POST** - Create new resource (return 201)
+- **PUT** - Update entire resource
+- **PATCH** - Update partial resource
+- **DELETE** - Remove resource
 
 ---
 

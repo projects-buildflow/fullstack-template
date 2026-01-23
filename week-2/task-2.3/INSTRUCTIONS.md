@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Hooks](https://react.dev/reference/react/hooks)
 
 ## Objective
@@ -52,153 +52,32 @@ interface EditTaskFormProps {
 }
 
 export function EditTaskForm({ task, onSubmit, onDelete, onCancel }: EditTaskFormProps) {
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description || '');
-  const [priority, setPriority] = useState<Priority>(task.priority);
-  const [errors, setErrors] = useState<{ title?: string }>({});
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // TODO: Initialize state from task prop
+  // const [title, setTitle] = useState(task.title);
+  // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const validate = () => {
-    const newErrors: { title?: string } = {};
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // TODO: Add validation function (similar to AddTaskForm)
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
+  // TODO: Add handleSubmit that calls onSubmit with updated task
 
-    onSubmit({
-      ...task,
-      title: title.trim(),
-      description: description.trim() || undefined,
-      priority,
-    });
-  };
-
-  if (showDeleteConfirm) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-gray-700 mb-4">
-          Are you sure you want to delete this task?
-        </p>
-        <p className="text-sm text-gray-500 mb-6">
-          &quot;{task.title}&quot;
-        </p>
-        <div className="flex justify-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => setShowDeleteConfirm(false)}
-          >
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={onDelete}>
-            Delete Task
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // TODO: Render delete confirmation UI if showDeleteConfirm is true
+  // Show task title and Cancel/Delete buttons
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Title */}
-      <div>
-        <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 mb-1">
-          Title *
-        </label>
-        <input
-          id="edit-title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.title ? 'border-red-500' : 'border-gray-300'
-          }`}
-          autoFocus
-        />
-        {errors.title && (
-          <p className="mt-1 text-sm text-red-500">{errors.title}</p>
-        )}
-      </div>
-
-      {/* Description */}
-      <div>
-        <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <textarea
-          id="edit-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      {/* Priority */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Priority
-        </label>
-        <div className="flex gap-3">
-          {(['low', 'medium', 'high'] as Priority[]).map((p) => (
-            <label
-              key={p}
-              className={`flex-1 text-center py-2 px-3 border rounded-md cursor-pointer transition-colors ${
-                priority === p
-                  ? p === 'low'
-                    ? 'bg-green-100 border-green-500 text-green-700'
-                    : p === 'medium'
-                    ? 'bg-yellow-100 border-yellow-500 text-yellow-700'
-                    : 'bg-red-100 border-red-500 text-red-700'
-                  : 'border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <input
-                type="radio"
-                name="priority"
-                value={p}
-                checked={priority === p}
-                onChange={() => setPriority(p)}
-                className="sr-only"
-              />
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Metadata */}
-      <div className="text-xs text-gray-500 pt-2 border-t">
-        Created: {new Date(task.createdAt).toLocaleString()}
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-between pt-4">
-        <Button
-          type="button"
-          variant="danger"
-          onClick={() => setShowDeleteConfirm(true)}
-        >
-          Delete
-        </Button>
-        <div className="flex gap-3">
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary">
-            Save Changes
-          </Button>
-        </div>
-      </div>
+      {/* TODO: Add same form fields as AddTaskForm */}
+      {/* TODO: Add metadata display (created date) */}
+      {/* TODO: Add Delete button on left, Cancel/Save on right */}
     </form>
   );
 }
 ```
+
+**Design Notes:**
+- Pre-populate all fields from task prop
+- Delete button: `variant="danger"` on left side
+- Show created date as readonly metadata
+- Delete confirmation: Simple dialog with task title quote
 
 ### 3. Create Edit Task Modal
 
@@ -221,15 +100,8 @@ export function EditTaskModal({ isOpen, onClose, task }: EditTaskModalProps) {
 
   if (!task) return null;
 
-  const handleSubmit = (updatedTask: Task) => {
-    updateTask(updatedTask);
-    onClose();
-  };
-
-  const handleDelete = () => {
-    deleteTask(task.id);
-    onClose();
-  };
+  // TODO: Create handleSubmit that calls updateTask
+  // TODO: Create handleDelete that calls deleteTask and closes modal
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Task">
@@ -252,12 +124,12 @@ Update `src/components/TaskCard.tsx`:
 // Add state for edit modal
 const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-// Update the card to open modal on click
+// Update the card div to open modal on click
 <div onClick={() => setIsEditModalOpen(true)}>
   {/* existing card content */}
 </div>
 
-// Add the modal
+// Add the modal at end of component
 <EditTaskModal
   isOpen={isEditModalOpen}
   onClose={() => setIsEditModalOpen(false)}
@@ -265,21 +137,17 @@ const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 />
 ```
 
-### 5. Alternative: Use a Shared Modal State
-
-For better organization, create a shared modal context or lift state up:
+**Alternative Approach:**
+Lift modal state to Board component for better organization:
 
 ```tsx
-// In Board component or BoardContext
+// In Board component
 const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-// Pass down the setter
-<TaskCard
-  task={task}
-  onClick={() => setEditingTask(task)}
-/>
+// Pass down
+<TaskCard task={task} onClick={() => setEditingTask(task)} />
 
-// One modal at the board level
+// One modal at board level
 <EditTaskModal
   isOpen={editingTask !== null}
   onClose={() => setEditingTask(null)}
@@ -287,7 +155,7 @@ const [editingTask, setEditingTask] = useState<Task | null>(null);
 />
 ```
 
-### 6. Test the Feature
+### 5. Test the Feature
 
 1. Click on any task card
 2. Verify form is pre-populated
@@ -295,7 +163,7 @@ const [editingTask, setEditingTask] = useState<Task | null>(null);
 4. Verify changes persist
 5. Test delete with confirmation
 
-### 7. Submit Your PR
+### 6. Submit Your PR
 
 ```bash
 git add .
@@ -317,6 +185,7 @@ git push -u origin task-2.3-edit-modal
 - Reuse the Modal component from Task 2.2
 - Keep delete confirmation simple
 - Show created date as metadata
+- Consider lifting modal state to parent for better UX
 
 ---
 

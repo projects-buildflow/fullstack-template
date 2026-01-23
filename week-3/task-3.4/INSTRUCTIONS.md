@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)
 
 ## Objective
@@ -60,39 +60,21 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    // TODO: Return state with hasError: true and error
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    // Send to error tracking service
+    // TODO: Log error to console (or send to error tracking service)
   }
 
   render() {
     if (this.state.hasError) {
+      // TODO: Render fallback UI
+      // Show friendly error message
+      // Add refresh button
+      // Show error details in development mode only
       return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center p-8">
-            <div className="text-6xl mb-4">😵</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Something went wrong
-            </h1>
-            <p className="text-gray-600 mb-6">
-              We hit an unexpected error. Please try refreshing the page.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Refresh Page
-            </button>
-            {process.env.NODE_ENV === 'development' && (
-              <pre className="mt-6 p-4 bg-red-50 text-red-700 text-left text-sm rounded overflow-auto max-w-lg">
-                {this.state.error?.toString()}
-              </pre>
-            )}
-          </div>
-        </div>
+        // ... default error UI
       );
     }
 
@@ -116,29 +98,19 @@ interface Toast {
   message: string;
 }
 
-interface ToastContextValue {
-  toasts: Toast[];
-  showToast: (type: ToastType, message: string) => void;
-  dismissToast: (id: string) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((type: ToastType, message: string) => {
-    const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev, { id, type, message }]);
+    // TODO: Generate random id
 
-    // Auto dismiss after 5 seconds
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
+    // TODO: Add toast to array
+
+    // TODO: Auto-dismiss after 5 seconds with setTimeout
   }, []);
 
   const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    // TODO: Remove toast from array
   }, []);
 
   return (
@@ -150,53 +122,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 export function useToast() {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
+  // TODO: Get context and throw error if outside provider
 }
 
-function ToastContainer({
-  toasts,
-  onDismiss,
-}: {
-  toasts: Toast[];
-  onDismiss: (id: string) => void;
-}) {
-  const typeStyles: Record<ToastType, string> = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    warning: 'bg-yellow-500',
-    info: 'bg-blue-500',
-  };
-
-  const icons: Record<ToastType, string> = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
-  };
-
-  return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2">
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className={`${typeStyles[toast.type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] animate-slide-in`}
-        >
-          <span className="text-lg">{icons[toast.type]}</span>
-          <span className="flex-1">{toast.message}</span>
-          <button
-            onClick={() => onDismiss(toast.id)}
-            className="text-white/80 hover:text-white"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-    </div>
-  );
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
+  // TODO: Render toasts in fixed bottom-right position
+  // Different colors for each type (green for success, red for error, etc.)
+  // Include dismiss button
 }
 ```
 
@@ -210,53 +142,30 @@ async function fetchWithRetry<T>(
   options: RequestInit = {},
   retries = 3
 ): Promise<T> {
-  let lastError: Error;
-
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fetchApi<T>(endpoint, options);
-    } catch (err) {
-      lastError = err as Error;
-
-      // Don't retry client errors (4xx)
-      if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-        throw err;
-      }
-
-      // Wait before retrying (exponential backoff)
-      if (i < retries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, i)));
-      }
-    }
-  }
-
-  throw lastError!;
+  // TODO: Implement retry loop
+  // Try up to 'retries' times
+  // Don't retry client errors (4xx status codes)
+  // Wait before retrying (exponential backoff: 1s, 2s, 4s)
+  // HINT: Use setTimeout wrapped in Promise for delays
 }
 
-// Human-readable error messages
 function getErrorMessage(error: unknown): string {
+  // TODO: Convert errors to user-friendly messages
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
-        return error.message || 'Invalid request. Please check your input.';
+        return 'Invalid request. Please check your input.';
       case 401:
         return 'Please log in to continue.';
-      case 403:
-        return 'You do not have permission to perform this action.';
       case 404:
         return 'The requested item was not found.';
-      case 429:
-        return 'Too many requests. Please wait a moment.';
       case 500:
         return 'Server error. Please try again later.';
-      default:
-        return error.message || 'An unexpected error occurred.';
+      // ... more cases
     }
   }
 
-  if (error instanceof TypeError && error.message === 'Failed to fetch') {
-    return 'Unable to connect to server. Please check your internet connection.';
-  }
+  // TODO: Handle network errors (Failed to fetch)
 
   return 'An unexpected error occurred. Please try again.';
 }
@@ -272,22 +181,13 @@ Create `src/hooks/useOnlineStatus.ts`:
 import { useState, useEffect } from 'react';
 
 export function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  // TODO: Track navigator.onLine state
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+  // TODO: Listen to 'online' and 'offline' events
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+  // TODO: Clean up event listeners
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  return isOnline;
+  // TODO: Return isOnline boolean
 }
 ```
 
@@ -301,13 +201,10 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 export function OfflineBanner() {
   const isOnline = useOnlineStatus();
 
-  if (isOnline) return null;
+  // TODO: Return null if online
 
-  return (
-    <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-yellow-900 text-center py-2 z-50">
-      You are offline. Changes will be saved when you reconnect.
-    </div>
-  );
+  // TODO: Show banner at top of screen when offline
+  // "You are offline. Changes will be saved when you reconnect."
 }
 ```
 
@@ -362,16 +259,24 @@ git push -u origin task-3.4-error-handling
 
 - [ ] ErrorBoundary catches and displays React errors
 - [ ] Toast notifications for success/error/warning
-- [ ] Retry logic for server errors (5xx)
+- [ ] Retry logic for server errors (5xx) with exponential backoff
 - [ ] Human-readable error messages
 - [ ] Offline detection and banner
 - [ ] Toasts auto-dismiss after 5 seconds
+- [ ] No cryptic error messages shown to users
 
 ## Tips
 
 - Keep error messages helpful and actionable
 - Log errors for debugging but show friendly messages to users
-- Use exponential backoff for retries
+- Use exponential backoff for retries (1s, 2s, 4s)
+- Don't retry client errors (400-499) - they won't succeed
+
+## Key Concepts
+
+**Error Boundary:** Catches React rendering errors
+**Exponential Backoff:** Wait longer between each retry (1s, 2s, 4s, 8s)
+**Graceful Degradation:** App continues working even with errors
 
 ---
 

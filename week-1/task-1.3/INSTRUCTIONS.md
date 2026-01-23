@@ -6,8 +6,9 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
 
 ## Objective
 
@@ -20,12 +21,30 @@ Create a reusable Button component with multiple variants (primary, secondary, d
 ## Requirements
 
 Build a `Button` component with:
-- **Variants:** primary (blue), secondary (gray), danger (red)
-- **Sizes:** sm, md, lg
-- **States:** normal, hover, disabled
-- **Loading state** with spinner (bonus)
+- **3 Variants:** primary (blue), secondary (gray), danger (red)
+- **3 Sizes:** sm, md, lg
+- **States:** normal, hover, focus, disabled
+- **Props:** Accepts all native button attributes (onClick, type, etc.)
+- **Bonus:** Loading state with animated spinner
 
-## Steps
+## Design Specifications
+
+**Variants:**
+- **Primary:** Blue background, white text (main actions)
+- **Secondary:** Gray background, dark text (secondary actions)
+- **Danger:** Red background, white text (destructive actions)
+
+**Sizes:**
+- **Small:** Compact padding, smaller text
+- **Medium:** Default size, comfortable padding
+- **Large:** Prominent, larger text and padding
+
+**States:**
+- **Hover:** Darker background color
+- **Focus:** Ring/outline for keyboard navigation
+- **Disabled:** Reduced opacity (50%), no pointer events
+
+## Implementation Guide
 
 ### 1. Create a New Branch
 
@@ -35,9 +54,9 @@ git pull origin main
 git checkout -b task-1.3-button-component
 ```
 
-### 2. Create the Button Component
+### 2. Define TypeScript Types
 
-Create `src/components/Button.tsx`:
+Create `src/components/Button.tsx` starting with:
 
 ```tsx
 import { ButtonHTMLAttributes, ReactNode } from 'react';
@@ -51,115 +70,96 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
   children: ReactNode;
 }
-
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-  secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-};
-
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
-};
-
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  isLoading = false,
-  disabled,
-  children,
-  className = '',
-  ...props
-}: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
-
-  return (
-    <button
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-      disabled={disabled || isLoading}
-      {...props}
-    >
-      {isLoading && (
-        <svg
-          className="animate-spin -ml-1 mr-2 h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12" cy="12" r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-          />
-        </svg>
-      )}
-      {children}
-    </button>
-  );
-}
 ```
 
-### 3. Create a Demo Page
+**Note:** `extends ButtonHTMLAttributes` gives you all native button props (onClick, disabled, type, etc.) for free!
 
-Create `src/pages/Components.tsx` to showcase your button:
+### 3. Build Styling System
 
+**Challenge:** Create a mapping object for each variant and size.
+
+**Hint - Variant classes pattern:**
 ```tsx
-import { Button } from '../components/Button';
-
-export function ComponentsPage() {
-  return (
-    <div className="container mx-auto py-8 space-y-8">
-      <h1 className="text-3xl font-bold">Component Library</h1>
-
-      {/* Variants */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Button Variants</h2>
-        <div className="flex gap-4">
-          <Button variant="primary">Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="danger">Danger</Button>
-        </div>
-      </section>
-
-      {/* Sizes */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Button Sizes</h2>
-        <div className="flex items-center gap-4">
-          <Button size="sm">Small</Button>
-          <Button size="md">Medium</Button>
-          <Button size="lg">Large</Button>
-        </div>
-      </section>
-
-      {/* States */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Button States</h2>
-        <div className="flex gap-4">
-          <Button>Normal</Button>
-          <Button disabled>Disabled</Button>
-          <Button isLoading>Loading</Button>
-        </div>
-      </section>
-    </div>
-  );
-}
+const variantClasses: Record<ButtonVariant, string> = {
+  primary: 'bg-blue-600 text-white hover:bg-blue-700 ...',
+  // TODO: Add secondary and danger
+};
 ```
 
-### 4. Test Your Component
+**Required Tailwind classes:**
+- Background colors: `bg-{color}-600`
+- Hover states: `hover:bg-{color}-700`
+- Focus rings: `focus:ring-{color}-500`
+- Text colors: `text-white` or `text-gray-800`
 
-1. Navigate to http://localhost:3000/components
-2. Verify all variants display correctly
-3. Test hover and disabled states
-4. Check the loading spinner animation
+**Hint - Size classes:**
+- Small: `px-3 py-1.5 text-sm`
+- Medium: `px-4 py-2 text-base`
+- Large: `px-6 py-3 text-lg`
 
-### 5. Submit Your PR
+**Base classes (applies to all buttons):**
+```
+inline-flex items-center justify-center font-medium rounded-md
+focus:outline-none focus:ring-2 focus:ring-offset-2
+transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+```
+
+### 4. Implement the Component
+
+**Your tasks:**
+- Accept props with default values (variant='primary', size='md')
+- Combine base classes + variant classes + size classes
+- Use template literals or `className` library
+- Spread remaining props: `{...props}`
+- Disable button if `disabled` or `isLoading` is true
+
+**Example usage your component should support:**
+```tsx
+<Button variant="primary" size="lg" onClick={handleClick}>
+  Click Me
+</Button>
+
+<Button variant="danger" disabled>
+  Delete
+</Button>
+
+<Button isLoading>
+  Submitting...
+</Button>
+```
+
+### 5. BONUS: Add Loading Spinner
+
+If `isLoading` is true, show a spinning icon before the children.
+
+**Spinner SVG hint:**
+```tsx
+<svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+  {/* Use a circle with partial stroke for spinner effect */}
+</svg>
+```
+
+### 6. Create Demo Page
+
+Create `src/pages/Components.tsx` to showcase all variations:
+- Section showing all 3 variants
+- Section showing all 3 sizes
+- Section showing different states (normal, disabled, loading)
+
+### 7. Test Your Component
+
+```bash
+npm run dev
+```
+
+Navigate to http://localhost:3000/components and verify:
+- All variants render with correct colors
+- Hover states work
+- Disabled buttons can't be clicked
+- Sizes are visually distinct
+- Loading spinner animates
+
+### 8. Submit Your PR
 
 ```bash
 git add .
@@ -167,32 +167,47 @@ git commit -m "feat: add reusable Button component with variants and sizes"
 git push -u origin task-1.3-button-component
 ```
 
-Create a PR with:
+PR should include:
 - Title: `Task 1.3: Button Component`
-- Screenshots of each variant and size
-- Brief explanation of your design decisions
+- Screenshots of all variants and sizes
+- Explanation of your approach
 
 ## Acceptance Criteria
 
 - [ ] Button supports primary, secondary, and danger variants
 - [ ] Button supports sm, md, and lg sizes
 - [ ] Disabled state reduces opacity and prevents clicks
-- [ ] Loading state shows spinner and disables button
-- [ ] Component is properly typed with TypeScript
-- [ ] Uses Tailwind CSS for styling
-- [ ] Passes lint checks
+- [ ] Hover states change background color
+- [ ] Focus state shows keyboard outline
+- [ ] Component properly typed with TypeScript
+- [ ] Accepts and spreads all native button props
+- [ ] Uses only Tailwind CSS (no custom CSS)
+- [ ] Passes `npm run lint` with no errors
 
 ## Bonus Challenges
 
-1. Add an `outline` variant for bordered buttons
-2. Add icon support (left and right icons)
-3. Create a `LinkButton` variant that renders as an `<a>` tag
+1. **Outline variant:** Border-only buttons with transparent background
+2. **Icon support:** Accept `leftIcon` and `rightIcon` props
+3. **Full width option:** `fullWidth` prop makes button 100% wide
+4. **Link button:** Render as `<a>` tag when `href` prop is provided
 
-## Tips
+## Resources
 
-- Use TypeScript union types for variant and size props
-- Spread remaining props to allow custom attributes
-- Test accessibility - buttons should be keyboard focusable
+- [TypeScript Record Type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)
+- [Tailwind Button Styles](https://tailwindcss.com/docs/background-color)
+- [Extending HTML Attributes](https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/basic_type_example/#useful-react-prop-type-examples)
+
+## Common Issues
+
+**Classes not applying?**
+- Tailwind requires full class names (can't use string interpolation like `bg-${color}-600`)
+- Use Record objects for dynamic classes
+
+**TypeScript errors on spread props?**
+- Ensure you're extending `ButtonHTMLAttributes<HTMLButtonElement>`
+
+**Disabled state not working?**
+- Remember: `disabled={disabled || isLoading}`
 
 ---
 

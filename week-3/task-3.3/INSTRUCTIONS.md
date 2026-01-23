@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
 
 ## Objective
@@ -54,67 +54,49 @@ async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;
+  // TODO: Build full URL with API_BASE + endpoint
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  // TODO: Make fetch request with JSON headers
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new ApiError(response.status, error.error?.message || error.message);
-  }
+  // TODO: Check if response.ok, if not throw ApiError
 
-  return response.json();
+  // TODO: Parse and return JSON
 }
 
 export const api = {
   // Tasks
-  getTasks: (columnId?: string) =>
-    fetchApi<{ tasks: Task[] }>(
-      columnId ? `/tasks?column_id=${columnId}` : '/tasks'
-    ),
+  getTasks: (columnId?: string) => {
+    // TODO: Fetch tasks, optionally filtered by column
+    // HINT: Use query param ?column_id=${columnId}
+  },
 
-  getTask: (id: string) =>
-    fetchApi<{ task: Task }>(`/tasks/${id}`),
+  getTask: (id: string) => {
+    // TODO: Fetch single task by id
+  },
 
-  createTask: (task: CreateTaskInput) =>
-    fetchApi<{ task: Task }>('/tasks', {
-      method: 'POST',
-      body: JSON.stringify(task),
-    }),
+  createTask: (task: CreateTaskInput) => {
+    // TODO: POST to /tasks with task data
+  },
 
-  updateTask: (id: string, updates: Partial<Task>) =>
-    fetchApi<{ task: Task }>(`/tasks/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    }),
+  updateTask: (id: string, updates: Partial<Task>) => {
+    // TODO: PUT to /tasks/:id with updates
+  },
 
-  deleteTask: (id: string) =>
-    fetchApi<{ message: string }>(`/tasks/${id}`, {
-      method: 'DELETE',
-    }),
+  deleteTask: (id: string) => {
+    // TODO: DELETE /tasks/:id
+  },
 
-  moveTask: (id: string, columnId: string, position?: number) =>
-    fetchApi<{ task: Task }>(`/tasks/${id}/move`, {
-      method: 'PATCH',
-      body: JSON.stringify({ column_id: columnId, position }),
-    }),
+  moveTask: (id: string, columnId: string, position?: number) => {
+    // TODO: PATCH /tasks/:id/move
+  },
 
   // Columns
-  getColumns: (boardId: string) =>
-    fetchApi<{ columns: Column[] }>(`/columns?board_id=${boardId}`),
-
-  // Boards
-  getBoard: (id: string) =>
-    fetchApi<{ board: Board }>(`/boards/${id}`),
+  getColumns: (boardId: string) => {
+    // TODO: GET /columns?board_id=xxx
+  },
 };
 
-// Types
+// TODO: Define CreateTaskInput interface
 interface CreateTaskInput {
   column_id: string;
   title: string;
@@ -134,7 +116,6 @@ Update `src/context/BoardContext.tsx`:
 ```typescript
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { api, ApiError } from '../api/client';
-import { Task, Column } from '../types/task';
 
 interface BoardState {
   columns: Column[];
@@ -143,14 +124,8 @@ interface BoardState {
   error: string | null;
 }
 
-type BoardAction =
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_DATA'; payload: { columns: Column[]; tasks: Task[] } }
-  | { type: 'ADD_TASK'; payload: Task }
-  | { type: 'UPDATE_TASK'; payload: Task }
-  | { type: 'DELETE_TASK'; payload: string }
-  | { type: 'MOVE_TASK'; payload: { taskId: string; toColumnId: string } };
+// TODO: Define BoardAction types
+// SET_LOADING, SET_ERROR, SET_DATA, ADD_TASK, UPDATE_TASK, DELETE_TASK, MOVE_TASK
 
 const initialState: BoardState = {
   columns: [],
@@ -160,138 +135,67 @@ const initialState: BoardState = {
 };
 
 function boardReducer(state: BoardState, action: BoardAction): BoardState {
+  // TODO: Handle each action type
   switch (action.type) {
     case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
+      // Return state with isLoading updated
 
     case 'SET_ERROR':
-      return { ...state, error: action.payload, isLoading: false };
+      // Return state with error and isLoading: false
 
-    case 'SET_DATA': {
-      const { columns, tasks } = action.payload;
-      const taskRecord = tasks.reduce((acc, task) => {
-        acc[task.id] = task;
-        return acc;
-      }, {} as Record<string, Task>);
+    case 'SET_DATA':
+      // Transform tasks array to Record<string, Task>
+      // Update columns with taskIds arrays
 
-      return {
-        ...state,
-        columns: columns.map((col) => ({
-          ...col,
-          taskIds: tasks.filter((t) => t.column_id === col.id).map((t) => t.id),
-        })),
-        tasks: taskRecord,
-        isLoading: false,
-        error: null,
-      };
-    }
+    case 'ADD_TASK':
+      // Add task to tasks record
+      // Add task.id to appropriate column's taskIds
 
-    case 'ADD_TASK': {
-      const task = action.payload;
-      return {
-        ...state,
-        tasks: { ...state.tasks, [task.id]: task },
-        columns: state.columns.map((col) =>
-          col.id === task.column_id
-            ? { ...col, taskIds: [...col.taskIds, task.id] }
-            : col
-        ),
-      };
-    }
+    // TODO: Implement UPDATE_TASK, DELETE_TASK, MOVE_TASK
 
-    // ... other cases similar to before
     default:
       return state;
   }
 }
 
-interface BoardContextValue {
-  state: BoardState;
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
-  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
-  moveTask: (taskId: string, toColumnId: string) => Promise<void>;
-  refresh: () => Promise<void>;
-}
-
-const BoardContext = createContext<BoardContextValue | null>(null);
-
 export function BoardProvider({ boardId, children }: { boardId: string; children: ReactNode }) {
   const [state, dispatch] = useReducer(boardReducer, initialState);
 
-  // Fetch initial data
+  // TODO: Fetch initial data on mount
   const fetchData = async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const [columnsRes, tasksRes] = await Promise.all([
-        api.getColumns(boardId),
-        api.getTasks(),
-      ]);
-      dispatch({
-        type: 'SET_DATA',
-        payload: { columns: columnsRes.columns, tasks: tasksRes.tasks },
-      });
-    } catch (err) {
-      dispatch({
-        type: 'SET_ERROR',
-        payload: err instanceof ApiError ? err.message : 'Failed to load board',
-      });
-    }
+    // Set loading true
+    // Fetch columns and tasks in parallel with Promise.all
+    // Dispatch SET_DATA with results
+    // Handle errors with SET_ERROR
   };
 
   useEffect(() => {
     fetchData();
   }, [boardId]);
 
-  // Actions that call API
+  // TODO: Implement action functions
   const addTask = async (taskInput: Omit<Task, 'id' | 'createdAt'>) => {
-    try {
-      const { task } = await api.createTask({
-        column_id: taskInput.columnId,
-        title: taskInput.title,
-        description: taskInput.description,
-        priority: taskInput.priority,
-      });
-      dispatch({ type: 'ADD_TASK', payload: task });
-    } catch (err) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to create task' });
-      throw err;
-    }
+    // Call api.createTask()
+    // Dispatch ADD_TASK with result
+    // Handle errors
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
-    try {
-      const { task } = await api.updateTask(id, updates);
-      dispatch({ type: 'UPDATE_TASK', payload: task });
-    } catch (err) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to update task' });
-      throw err;
-    }
+    // Call api.updateTask()
+    // Dispatch UPDATE_TASK with result
   };
 
   const deleteTask = async (id: string) => {
-    try {
-      await api.deleteTask(id);
-      dispatch({ type: 'DELETE_TASK', payload: id });
-    } catch (err) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to delete task' });
-      throw err;
-    }
+    // Call api.deleteTask()
+    // Dispatch DELETE_TASK with id
   };
 
   const moveTask = async (taskId: string, toColumnId: string) => {
-    // Optimistic update
-    const task = state.tasks[taskId];
-    const fromColumnId = task.column_id;
-    dispatch({ type: 'MOVE_TASK', payload: { taskId, toColumnId } });
-
-    try {
-      await api.moveTask(taskId, toColumnId);
-    } catch (err) {
-      // Rollback on failure
-      dispatch({ type: 'MOVE_TASK', payload: { taskId, toColumnId: fromColumnId } });
-      throw err;
-    }
+    // TODO: Implement optimistic update
+    // 1. Save current state
+    // 2. Update UI immediately (dispatch MOVE_TASK)
+    // 3. Call API
+    // 4. On error, rollback (dispatch MOVE_TASK back to original)
   };
 
   return (
@@ -301,14 +205,6 @@ export function BoardProvider({ boardId, children }: { boardId: string; children
       {children}
     </BoardContext.Provider>
   );
-}
-
-export function useBoard() {
-  const context = useContext(BoardContext);
-  if (!context) {
-    throw new Error('useBoard must be used within a BoardProvider');
-  }
-  return context;
 }
 ```
 
@@ -320,29 +216,13 @@ Update `src/components/Board.tsx`:
 export function Board() {
   const { state } = useBoard();
 
-  if (state.isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
+  // TODO: Show loading spinner if state.isLoading
+  // HINT: Use a centered spinner component
 
-  if (state.error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{state.error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // TODO: Show error message if state.error
+  // Include a retry button that calls refresh()
+
+  // TODO: Render board if data loaded successfully
 
   return (
     // ... rest of board rendering
@@ -376,10 +256,10 @@ git push -u origin task-3.3-connect-api
 
 ## Acceptance Criteria
 
-- [ ] API client module created
+- [ ] API client module created with all endpoints
 - [ ] Board fetches data on mount
 - [ ] Loading spinner shown while fetching
-- [ ] Error message shown on failure
+- [ ] Error message shown on failure with retry
 - [ ] Create task calls API and updates UI
 - [ ] Update task calls API and updates UI
 - [ ] Delete task calls API and updates UI
@@ -387,9 +267,16 @@ git push -u origin task-3.3-connect-api
 
 ## Tips
 
-- Use optimistic updates for better UX
+- Use optimistic updates for better UX (update UI before API response)
 - Always handle errors in async functions
 - Add retry logic for failed requests
+- Keep API client separate from React components
+
+## Key Concepts
+
+**Optimistic Update:** Update UI immediately, rollback if API fails
+**Loading States:** Show spinners during async operations
+**Error Boundaries:** Catch and display errors gracefully
 
 ---
 

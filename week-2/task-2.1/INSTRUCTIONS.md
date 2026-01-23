@@ -6,7 +6,7 @@
 
 ## Quick Links
 
-- [Team Chat](https://buildflow.dev/team) - Get help from mentors
+- **Team Chat** in your dashboard - Get help from mentors
 - [React Context Guide](https://react.dev/learn/passing-data-deeply-with-context)
 
 ## Objective
@@ -69,67 +69,28 @@ const initialState: BoardState = {
 function boardReducer(state: BoardState, action: BoardAction): BoardState {
   switch (action.type) {
     case 'ADD_TASK': {
-      const task = action.payload;
-      const column = state.columns.find((c) => c.id === task.columnId);
-      if (!column) return state;
-
-      return {
-        ...state,
-        tasks: { ...state.tasks, [task.id]: task },
-        columns: state.columns.map((c) =>
-          c.id === task.columnId
-            ? { ...c, taskIds: [...c.taskIds, task.id] }
-            : c
-        ),
-      };
+      // TODO: Add task to tasks object
+      // TODO: Add task.id to correct column's taskIds array
+      // Hint: Find column by task.columnId
+      // Hint: Return new state object (immutably)
     }
 
     case 'UPDATE_TASK': {
-      const task = action.payload;
-      return {
-        ...state,
-        tasks: { ...state.tasks, [task.id]: task },
-      };
+      // TODO: Update task in tasks object
+      // Hint: Spread existing task and override with new data
     }
 
     case 'DELETE_TASK': {
-      const taskId = action.payload;
-      const task = state.tasks[taskId];
-      if (!task) return state;
-
-      const { [taskId]: removed, ...remainingTasks } = state.tasks;
-
-      return {
-        ...state,
-        tasks: remainingTasks,
-        columns: state.columns.map((c) =>
-          c.id === task.columnId
-            ? { ...c, taskIds: c.taskIds.filter((id) => id !== taskId) }
-            : c
-        ),
-      };
+      // TODO: Remove task from tasks object
+      // TODO: Remove task.id from column's taskIds
+      // Hint: Use object destructuring to remove key
+      // Hint: Use filter() to remove from taskIds array
     }
 
     case 'MOVE_TASK': {
-      const { taskId, fromColumnId, toColumnId } = action.payload;
-      if (fromColumnId === toColumnId) return state;
-
-      return {
-        ...state,
-        tasks: {
-          ...state.tasks,
-          [taskId]: { ...state.tasks[taskId], columnId: toColumnId },
-        },
-        columns: state.columns.map((c) => {
-          if (c.id === fromColumnId) {
-            return { ...c, taskIds: c.taskIds.filter((id) => id !== taskId) };
-          }
-          if (c.id === toColumnId) {
-            return { ...c, taskIds: [...c.taskIds, taskId] };
-          }
-          return c;
-        }),
-      };
+      // TODO: Update task's columnId
+      // TODO: Remove from old column's taskIds
+      // TODO: Add to new column's taskIds
     }
 
     default:
@@ -152,11 +113,8 @@ const BoardContext = createContext<BoardContextValue | null>(null);
 export function BoardProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(boardReducer, initialState);
 
-  const addTask = (task: Task) => dispatch({ type: 'ADD_TASK', payload: task });
-  const updateTask = (task: Task) => dispatch({ type: 'UPDATE_TASK', payload: task });
-  const deleteTask = (taskId: string) => dispatch({ type: 'DELETE_TASK', payload: taskId });
-  const moveTask = (taskId: string, fromColumnId: string, toColumnId: string) =>
-    dispatch({ type: 'MOVE_TASK', payload: { taskId, fromColumnId, toColumnId } });
+  // TODO: Create action functions that call dispatch
+  // Example: const addTask = (task: Task) => dispatch({ type: 'ADD_TASK', payload: task });
 
   return (
     <BoardContext.Provider value={{ state, addTask, updateTask, deleteTask, moveTask }}>
@@ -205,20 +163,9 @@ export function Board() {
 
   return (
     <div className="flex gap-6 overflow-x-auto p-6 min-h-screen bg-gray-50">
-      {state.columns.map((column) => (
-        <Column
-          key={column.id}
-          column={column}
-          taskCount={column.taskIds.length}
-        >
-          {column.taskIds.map((taskId) => (
-            <TaskCard
-              key={taskId}
-              task={state.tasks[taskId]}
-            />
-          ))}
-        </Column>
-      ))}
+      {/* TODO: Map over state.columns */}
+      {/* TODO: For each column, render Column component */}
+      {/* TODO: For each column.taskIds, render TaskCard with state.tasks[taskId] */}
     </div>
   );
 }
@@ -256,6 +203,15 @@ git push -u origin task-2.1-state-management
 - Always spread state to create new objects (immutability)
 - Keep action types in a union for type safety
 - Consider using immer for complex state updates
+- Test each action type independently
+
+## Common Issues
+
+**Issue:** "Cannot read property of undefined"
+**Fix:** Ensure reducer returns a new state object for every case
+
+**Issue:** State not updating
+**Fix:** Check that you're spreading state and not mutating directly
 
 ---
 
