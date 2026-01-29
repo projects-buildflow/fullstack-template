@@ -107,10 +107,8 @@ Add search/filters, optimize performance, deploy to production.
 
 ### Team Contacts (AI Personas)
 
-- **Alex Chen** (Tech Lead) - Architecture questions, code reviews
-- **Sarah Johnson** (Senior Frontend Developer) - UI/UX, React patterns
-- **Marcus Williams** (Backend Engineer) - API design, database
-- **Jamie Park** (Product Designer) - Requirements, UX feedback
+- **Alex Chen** (Tech Lead) - Architecture, code reviews, backend, deployment
+- **Jamie Park** (Product Designer) - UI/UX, frontend patterns, requirements
 
 ### Resources
 
