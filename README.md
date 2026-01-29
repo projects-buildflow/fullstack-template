@@ -1,6 +1,6 @@
 # TaskMaster - Full-Stack Virtual Internship
 
-Welcome to **TaskMaster**, a productivity software company! Over the next 4 weeks, you'll build a **Kanban board application** from scratch, learning full-stack development with React and Node.js.
+Welcome to **TaskMaster**, a productivity software company! Over the next 4 weeks, you'll build a **Kanban board application** from scratch, learning full-stack development with Next.js.
 
 ## Your Mission
 
@@ -10,21 +10,18 @@ TaskMaster is preparing to launch their next-generation task management platform
 
 ```
 taskmaster/
-├── src/                    # Frontend React application
-│   ├── components/         # Reusable UI components
-│   ├── pages/              # Page components
-│   ├── lib/                # Utilities and helpers
+├── app/                    # Next.js App Router pages
+│   ├── layout.tsx          # Root layout
+│   ├── page.tsx            # Home page
+│   └── api/                # API routes (Week 3+)
+├── components/             # Reusable UI components
+├── lib/                    # Utilities and helpers
+│   ├── context/            # React Context providers
+│   ├── hooks/              # Custom hooks
 │   └── api/                # API client functions
-├── server/                 # Backend Node.js/Express application
-│   ├── routes/             # API route handlers
-│   ├── db/                 # Database configuration
-│   └── middleware/         # Express middleware
-├── scripts/                # Utility scripts
-├── week-1/                 # Week 1 task instructions
-├── week-2/                 # Week 2 task instructions
-├── week-3/                 # Week 3 task instructions
-├── week-4/                 # Week 4 task instructions
-└── docs/                   # Documentation
+├── types/                  # TypeScript type definitions
+├── public/                 # Static assets
+└── scripts/                # Utility scripts
 ```
 
 ## Prerequisites
@@ -58,7 +55,7 @@ npm install
 npm run dev
 ```
 
-Frontend will be available at: http://localhost:3000
+App will be available at: http://localhost:3000
 
 ### 4. Verify Setup (Task 1.1)
 
@@ -71,15 +68,14 @@ If successful, you'll receive a verification token to submit.
 ## Tech Stack
 
 ### Frontend
-- **React 18** - UI library
+- **Next.js 15** - React framework with App Router
+- **React 19** - UI library
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
-- **dnd-kit** - Drag and drop
 
 ### Backend (Week 3+)
-- **Node.js** - Runtime
-- **Express** - Web framework
-- **PostgreSQL** - Database
+- **Next.js API Routes** - Backend endpoints
+- **PostgreSQL** - Database (via Supabase)
 - **JWT** - Authentication
 
 ## Weekly Overview
@@ -100,39 +96,38 @@ Add search/filters, optimize performance, deploy to production.
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
+| `npm run dev` | Start development server (Turbopack) |
 | `npm run build` | Build for production |
+| `npm run start` | Start production server |
 | `npm run test` | Run tests |
 | `npm run lint` | Check code style |
 | `npm run verify` | Verify setup (Task 1.1) |
-| `npm run server` | Start backend server (Week 3+) |
 
 ## Getting Help
 
 ### Team Contacts (AI Personas)
 
 - **Alex Chen** (Tech Lead) - Architecture questions, code reviews
-- **Sarah Johnson** (Senior Frontend Developer) - UI/UX, React patterns, accessibility
-- **Marcus Williams** (Backend Engineer) - API design, database, Node.js
-- **Jamie Park** (Product Designer) - Requirements, UX feedback, design decisions
+- **Sarah Johnson** (Senior Frontend Developer) - UI/UX, React patterns
+- **Marcus Williams** (Backend Engineer) - API design, database
+- **Jamie Park** (Product Designer) - Requirements, UX feedback
 
 ### Resources
 
+- [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
-- [Express.js](https://expressjs.com/)
 
 ## Submitting Your Work
 
 ### Token Tasks (Setup)
-Run the verify script and submit the token:
-- **Web Portal:** Tasks page > Submit Token
+Run the verify script and submit the token in your dashboard.
 
 ### PR Tasks (Code)
-1. Create a new branch: `git checkout -b task-X.Y`
+1. Create a new branch: `git checkout -b task-X.Y-description`
 2. Make your changes
-3. Push: `git push -u origin task-X.Y`
+3. Push: `git push -u origin task-X.Y-description`
 4. Create a Pull Request on GitHub
 5. AI review will automatically run
 
@@ -140,29 +135,22 @@ Run the verify script and submit the token:
 
 ### "npm install" fails
 ```bash
-# Clear npm cache and reinstall
 rm -rf node_modules package-lock.json
 npm install
 ```
 
 ### Port 3000 already in use
 ```bash
-# Use a different port
-npm run dev -- --port 3001
+npm run dev -- -p 3001
 ```
 
 ### TypeScript errors
 ```bash
-# Check for type issues
 npm run lint
 ```
 
-### Can't connect to backend (Week 3+)
-- Make sure backend is running: `npm run server`
-- Check `.env` file has correct `DATABASE_URL`
-
 ---
 
-**Ready to start?** Head to [Week 1, Task 1.1: Environment Setup](./week-1/task-1.1/INSTRUCTIONS.md)
+**Ready to start?** Run `npm run verify` to complete Task 1.1!
 
 Good luck, and welcome to TaskMaster!
