@@ -17,7 +17,6 @@ jobs:
     outputs:
       task_id: ${{ steps.detect.outputs.task_id }}
       week: ${{ steps.detect.outputs.week }}
-      is_ai_review_task: ${{ steps.detect.outputs.is_ai_review_task }}
 
     steps:
       - name: Checkout code
@@ -37,17 +36,10 @@ jobs:
           # Get week number
           WEEK=$(echo "$TASK_ID" | cut -d'.' -f1)
 
-          # Check if this is an AI review task (1.6, 3.6, 4.2, 4.6)
-          IS_AI_REVIEW=false
-          if [[ "$TASK_ID" == "1.6" ]] || [[ "$TASK_ID" == "3.6" ]] || [[ "$TASK_ID" == "4.2" ]] || [[ "$TASK_ID" == "4.6" ]]; then
-            IS_AI_REVIEW=true
-          fi
-
           echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
           echo "week=$WEEK" >> $GITHUB_OUTPUT
-          echo "is_ai_review_task=$IS_AI_REVIEW" >> $GITHUB_OUTPUT
 
-          echo "Detected: Task=$TASK_ID, Week=$WEEK, AI Review=$IS_AI_REVIEW"
+          echo "Detected: Task=$TASK_ID, Week=$WEEK"
 
       - name: Validate branch naming
         run: |
@@ -103,7 +95,6 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: setup
-    if: needs.setup.outputs.is_ai_review_task != 'true'
     outputs:
       passed: ${{ steps.test.outputs.passed }}
 
@@ -173,41 +164,7 @@ jobs:
           if-no-files-found: ignore
 
   # ============================================
-  # Job 4: AI Review (for documentation tasks)
-  # ============================================
-  ai-review:
-    name: AI Review
-    runs-on: ubuntu-latest
-    needs: [setup]
-    if: needs.setup.outputs.is_ai_review_task == 'true'
-
-    steps:
-      - name: Trigger AI review
-        env:
-          BACKEND_URL: ${{ secrets.BACKEND_URL }}
-          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
-        run: |
-          if [ -z "$BACKEND_URL" ]; then
-            echo "BACKEND_URL not configured, skipping AI review"
-            exit 0
-          fi
-
-          curl -X POST "${BACKEND_URL}/webhooks/ai-review" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${WEBHOOK_SECRET}" \
-            -d '{
-              "pr_number": ${{ github.event.pull_request.number }},
-              "pr_url": "${{ github.event.pull_request.html_url }}",
-              "task_id": "${{ needs.setup.outputs.task_id }}",
-              "student_github": "${{ github.event.pull_request.user.login }}",
-              "repo": "${{ github.repository }}",
-              "track": "fullstack"
-            }' || echo "AI review request failed (non-fatal)"
-
-          echo "AI review triggered"
-
-  # ============================================
-  # Job 5: Notify Backend
+  # Job 4: Notify Backend (triggers AI review if needed)
   # ============================================
   notify:
     name: Notify Backend
@@ -249,7 +206,7 @@ jobs:
           echo "Backend notified"
 
   # ============================================
-  # Job 6: Auto-merge PR when all checks pass
+  # Job 5: Auto-merge PR when all checks pass
   # ============================================
   auto-merge:
     name: Auto Merge
