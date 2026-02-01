@@ -30,24 +30,35 @@ jobs:
           BRANCH="${{ github.head_ref }}"
           echo "Branch: $BRANCH"
 
-          # Extract task ID (e.g., "task-2.1" or "task-2.1-add-button" -> "2.1")
-          TASK_ID=$(echo "$BRANCH" | grep -oP 'task-\K[0-9]+\.[0-9]+' || echo "")
+          # Extract task ID - flexible matching for patterns like:
+          # task-1.2, task-1.2-feature, 1.2-my-branch, feature/1.2, etc.
+          TASK_ID=$(echo "$BRANCH" | grep -oP '\d+\.\d+' | head -1 || echo "")
 
-          # Get week number
-          WEEK=$(echo "$TASK_ID" | cut -d'.' -f1)
+          if [ -z "$TASK_ID" ]; then
+            echo "::warning::Could not detect task number from branch: $BRANCH"
+            echo "::warning::Branch should contain a task number like 1.2 or 2.1"
+            echo "task_id=" >> $GITHUB_OUTPUT
+            echo "week=" >> $GITHUB_OUTPUT
+          else
+            # Get week number
+            WEEK=$(echo "$TASK_ID" | cut -d'.' -f1)
+            echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
+            echo "week=$WEEK" >> $GITHUB_OUTPUT
+            echo "Detected: Task=$TASK_ID, Week=$WEEK"
+          fi
 
-          echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
-          echo "week=$WEEK" >> $GITHUB_OUTPUT
-
-          echo "Detected: Task=$TASK_ID, Week=$WEEK"
-
-      - name: Validate branch naming
+      - name: Validate branch has task number
         run: |
-          BRANCH="${{ github.head_ref }}"
-          if [[ ! "$BRANCH" =~ ^task-[0-9]+\.[0-9]+ ]]; then
-            echo "::error::Invalid branch name format"
-            echo "Expected: task-<week>.<task> or task-<week>.<task>-<description>"
-            echo "Example: task-2.1 or task-2.1-add-button"
+          TASK_ID="${{ steps.detect.outputs.task_id }}"
+          if [ -z "$TASK_ID" ]; then
+            echo "::error::Branch name must contain a task number (e.g., 1.2)"
+            echo ""
+            echo "Valid branch name examples:"
+            echo "  - task-1.2"
+            echo "  - task-1.2-my-feature"
+            echo "  - 1.2-add-button"
+            echo ""
+            echo "Your branch: ${{ github.head_ref }}"
             exit 1
           fi
 
