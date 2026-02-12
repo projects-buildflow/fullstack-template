@@ -108,6 +108,7 @@ jobs:
     needs: setup
     outputs:
       passed: ${{ steps.test.outputs.passed }}
+      test_score: ${{ steps.test.outputs.test_score }}
 
     steps:
       - name: Checkout code
@@ -157,9 +158,11 @@ jobs:
           # Always set the output before potentially failing
           if [ $TEST_EXIT_CODE -eq 0 ]; then
             echo "passed=true" >> $GITHUB_OUTPUT
+            echo "test_score=100" >> $GITHUB_OUTPUT
             echo "✅ All tests passed!"
           else
             echo "passed=false" >> $GITHUB_OUTPUT
+            echo "test_score=0" >> $GITHUB_OUTPUT
             echo "❌ Some tests failed. Please fix them before merging."
           fi
 
@@ -196,7 +199,14 @@ jobs:
 
           # Determine overall status
           LINT_PASSED="${{ needs.lint.result == 'success' }}"
-          TEST_PASSED="${{ needs.test.outputs.passed || 'skip' }}"
+          TEST_PASSED="${{ needs.test.outputs.passed }}"
+          TEST_SCORE="${{ needs.test.outputs.test_score }}"
+
+          # Convert skip to false — no test file means not passing
+          if [ "$TEST_PASSED" = "skip" ] || [ -z "$TEST_PASSED" ]; then
+            TEST_PASSED="false"
+            TEST_SCORE="0"
+          fi
 
           curl -X POST "${BACKEND_URL}/webhooks/github" \
             -H "Content-Type: application/json" \
@@ -210,50 +220,9 @@ jobs:
               "branch_name": "${{ github.head_ref }}",
               "lint_passed": '"$LINT_PASSED"',
               "test_passed": "'"$TEST_PASSED"'",
+              "test_score": '"$TEST_SCORE"',
               "repo": "${{ github.repository }}",
               "track": "fullstack"
             }' || echo "Backend notification failed (non-fatal)"
 
           echo "Backend notified"
-
-  # ============================================
-  # Job 5: Auto-merge PR when all checks pass
-  # ============================================
-  auto-merge:
-    name: Auto Merge
-    runs-on: ubuntu-latest
-    needs: [setup, lint, test]
-    if: |
-      needs.lint.result == 'success' &&
-      (needs.test.outputs.passed == 'true' || needs.test.outputs.passed == 'skip')
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Approve and merge PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          TASK_ID=${{ needs.setup.outputs.task_id }}
-
-          echo "✅ All checks passed for Task ${TASK_ID}!"
-          echo ""
-
-          # Approve the PR
-          echo "Approving PR #${PR_NUMBER}..."
-          gh pr review ${PR_NUMBER} --approve --body "✅ All checks passed! Auto-approved by BuildFlow."
-
-          # Merge the PR with squash
-          echo "Merging PR #${PR_NUMBER}..."
-          gh pr merge ${PR_NUMBER} \
-            --squash \
-            --delete-branch \
-            --body "🎉 Task ${TASK_ID} completed! Auto-merged by BuildFlow."
-
-          echo ""
-          echo "🎉 PR merged successfully!"

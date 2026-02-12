@@ -1,0 +1,80 @@
+name: Test Results Comment
+
+on:
+  workflow_run:
+    workflows: ["Task Submission"]
+    types: [completed]
+
+jobs:
+  comment:
+    name: Post Test Results
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      - name: Download test output
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: submission.yml
+          run_id: ${{ github.event.workflow_run.id }}
+          name: test-output
+          path: ./reports
+        continue-on-error: true
+
+      - name: Post comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const outputPath = './reports/test-output.txt';
+            if (!fs.existsSync(outputPath)) {
+              console.log('No test output found, skipping comment');
+              return;
+            }
+
+            let output;
+            try {
+              output = fs.readFileSync(outputPath, 'utf8');
+            } catch (e) {
+              console.log('Could not read test output:', e);
+              return;
+            }
+
+            const passed = output.includes('Tests passed') || (output.includes('pass') && !output.includes('fail'));
+            const truncated = output.length > 3000
+              ? output.substring(0, 3000) + '\n... (truncated)'
+              : output;
+
+            let body = '## Test Results\n\n';
+
+            if (passed) {
+              body += '**All tests passed!**\n\n';
+              body += 'Great work! Your submission is looking good.\n';
+            } else {
+              body += '**Some tests failed.** Please review the output below:\n\n';
+              body += '```\n' + truncated + '\n```\n\n';
+              body += '### Tips\n';
+              body += '- Read the error messages carefully\n';
+              body += '- Check the task instructions\n';
+              body += '- Ask in Team Chat if you need help\n';
+            }
+
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`
+            });
+
+            if (prs.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prs.data[0].number,
+                body: body
+              });
+              console.log('Comment posted to PR #' + prs.data[0].number);
+            } else {
+              console.log('No open PR found for branch');
+            }

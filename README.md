@@ -20,7 +20,6 @@ taskmaster/
 │   ├── hooks/              # Custom hooks
 │   └── api/                # API client functions
 ├── types/                  # TypeScript type definitions
-├── public/                 # Static assets
 └── scripts/                # Utility scripts
 ```
 
