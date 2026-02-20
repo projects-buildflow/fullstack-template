@@ -109,6 +109,7 @@ jobs:
     outputs:
       passed: ${{ steps.test.outputs.passed }}
       test_score: ${{ steps.test.outputs.test_score }}
+      failed_tests: ${{ steps.failures.outputs.failed_tests }}
 
     steps:
       - name: Checkout code
@@ -169,6 +170,37 @@ jobs:
           # Exit with the test result so the job properly fails
           exit $TEST_EXIT_CODE
 
+      - name: Extract failed test details
+        id: failures
+        if: always()
+        run: |
+          if [ -f test-output.txt ]; then
+            FAILED_TESTS=$(node -e "
+          const fs = require('fs');
+          const lines = fs.readFileSync('test-output.txt', 'utf8').split('\n');
+          const failures = [];
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.includes('×') || (line.includes('FAIL') && line.includes('>'))) {
+              const name = line.replace(/[×✗]/g, '').replace(/.*>/, '').trim();
+              let error = '';
+              for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+                const l = lines[j].trim();
+                if (l.startsWith('Error') || l.startsWith('Assertion') || l.startsWith('expect')) {
+                  error = l.substring(0, 200);
+                  break;
+                }
+              }
+              if (name) failures.push({name, error});
+            }
+          }
+          console.log(JSON.stringify(failures.slice(0, 10)));
+          " 2>/dev/null || echo "[]")
+            echo "failed_tests=$FAILED_TESTS" >> $GITHUB_OUTPUT
+          else
+            echo "failed_tests=[]" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload test output
         if: always()
         uses: actions/upload-artifact@v4
@@ -191,6 +223,10 @@ jobs:
         env:
           BACKEND_URL: ${{ secrets.BACKEND_URL }}
           WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+          FAILED_TESTS: ${{ needs.test.outputs.failed_tests }}
+          RAW_TEST_PASSED: ${{ needs.test.outputs.passed }}
+          RAW_TEST_SCORE: ${{ needs.test.outputs.test_score }}
+          RAW_LINT_PASSED: ${{ needs.lint.result == 'success' }}
         run: |
           if [ -z "$BACKEND_URL" ]; then
             echo "BACKEND_URL not configured, skipping notification"
@@ -198,9 +234,9 @@ jobs:
           fi
 
           # Determine overall status
-          LINT_PASSED="${{ needs.lint.result == 'success' }}"
-          TEST_PASSED="${{ needs.test.outputs.passed }}"
-          TEST_SCORE="${{ needs.test.outputs.test_score }}"
+          LINT_PASSED="$RAW_LINT_PASSED"
+          TEST_PASSED="$RAW_TEST_PASSED"
+          TEST_SCORE="$RAW_TEST_SCORE"
 
           # Convert skip to false — no test file means not passing
           if [ "$TEST_PASSED" = "skip" ] || [ -z "$TEST_PASSED" ]; then
@@ -208,21 +244,42 @@ jobs:
             TEST_SCORE="0"
           fi
 
+          if [ -z "$FAILED_TESTS" ]; then
+            FAILED_TESTS="[]"
+          fi
+
+          # Use jq to safely construct JSON (handles special chars in failed_tests)
+          PAYLOAD=$(jq -n \
+            --arg event "pr_check_complete" \
+            --argjson pr_number "${{ github.event.pull_request.number }}" \
+            --arg pr_url "${{ github.event.pull_request.html_url }}" \
+            --arg task_id "${{ needs.setup.outputs.task_id }}" \
+            --arg student_github "${{ github.event.pull_request.user.login }}" \
+            --arg branch_name "${{ github.head_ref }}" \
+            --argjson lint_passed "$LINT_PASSED" \
+            --arg test_passed "$TEST_PASSED" \
+            --argjson test_score "${TEST_SCORE:-0}" \
+            --arg repo "${{ github.repository }}" \
+            --arg track "fullstack" \
+            --argjson failed_tests "$FAILED_TESTS" \
+            '{
+              event: $event,
+              pr_number: $pr_number,
+              pr_url: $pr_url,
+              task_id: $task_id,
+              student_github: $student_github,
+              branch_name: $branch_name,
+              lint_passed: $lint_passed,
+              test_passed: $test_passed,
+              test_score: $test_score,
+              repo: $repo,
+              track: $track,
+              failed_tests: $failed_tests
+            }')
+
           curl -X POST "${BACKEND_URL}/webhooks/github" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${WEBHOOK_SECRET}" \
-            -d '{
-              "event": "pr_check_complete",
-              "pr_number": ${{ github.event.pull_request.number }},
-              "pr_url": "${{ github.event.pull_request.html_url }}",
-              "task_id": "${{ needs.setup.outputs.task_id }}",
-              "student_github": "${{ github.event.pull_request.user.login }}",
-              "branch_name": "${{ github.head_ref }}",
-              "lint_passed": '"$LINT_PASSED"',
-              "test_passed": "'"$TEST_PASSED"'",
-              "test_score": '"$TEST_SCORE"',
-              "repo": "${{ github.repository }}",
-              "track": "fullstack"
-            }' || echo "Backend notification failed (non-fatal)"
+            -d "$PAYLOAD" || echo "Backend notification failed (non-fatal)"
 
           echo "Backend notified"
